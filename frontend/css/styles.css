@@ -1,0 +1,341 @@
+/* ==========================================================================
+   PERSONAL FINANCE MANAGER PRO — PRODUCTION STYLESHEET
+   Mobile-First Responsive Design | Light & Dark Mode | Print Friendly
+   ========================================================================== */
+
+:root {
+  --bg-body: #F1F5F9;
+  --bg-surface: #FFFFFF;
+  --bg-subtle: #F8FAFC;
+  --bg-sidebar: #0F172A;
+  --text-primary: #0F172A;
+  --text-secondary: #475569;
+  --text-muted: #94A3B8;
+  --border-color: #E2E8F0;
+  --primary: #2563EB;
+  --primary-hover: #1D4ED8;
+  --success: #10B981;
+  --danger: #EF4444;
+  --warning: #F59E0B;
+  --info: #0EA5E9;
+  --card-shadow: 0 1px 3px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);
+  --radius-lg: 14px;
+  --radius-md: 10px;
+}
+
+[data-theme="dark"] {
+  --bg-body: #0B1120;
+  --bg-surface: #1E293B;
+  --bg-subtle: #0F172A;
+  --bg-sidebar: #090D16;
+  --text-primary: #F8FAFC;
+  --text-secondary: #CBD5E1;
+  --text-muted: #64748B;
+  --border-color: #334155;
+  --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: 'Prompt', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background-color: var(--bg-body);
+  color: var(--text-primary);
+  transition: background-color 0.2s ease, color 0.2s ease;
+  min-height: 100vh;
+}
+
+/* Auth Screen */
+.auth-wrapper {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem;
+  background: radial-gradient(circle at top right, #1E3A8A, #0F172A 70%);
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 460px;
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  border-radius: 18px;
+  padding: 2rem;
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--border-color);
+}
+
+/* App Shell */
+.app-layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+.app-sidebar {
+  width: 260px;
+  background-color: var(--bg-sidebar);
+  color: #F8FAFC;
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 1030;
+  transition: transform 0.25s ease;
+}
+
+.sidebar-brand {
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.sidebar-brand-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #3B82F6, #10B981);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1.2rem;
+  color: #fff;
+}
+
+.sidebar-nav {
+  padding: 1rem 0.75rem;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.nav-item-btn {
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: none;
+  color: #94A3B8;
+  padding: 0.75rem 1rem;
+  border-radius: 10px;
+  margin-bottom: 0.3rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.nav-item-btn:hover {
+  color: #FFFFFF;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.nav-item-btn.active {
+  color: #FFFFFF;
+  background: var(--primary);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
+}
+
+.app-main {
+  flex: 1;
+  margin-left: 260px;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding-bottom: 4.5rem;
+}
+
+.app-topbar {
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border-color);
+  padding: 0.85rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 1010;
+}
+
+.app-content {
+  padding: 1.5rem;
+  max-width: 1440px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+/* Cards & Surfaces */
+.surface-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--card-shadow);
+  padding: 1.25rem;
+}
+
+.kpi-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem;
+  box-shadow: var(--card-shadow);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.kpi-label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--text-secondary);
+}
+
+.kpi-value {
+  font-size: 1.65rem;
+  font-weight: 700;
+  margin: 0.35rem 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.amount-income { color: #10B981 !important; }
+.amount-expense { color: #EF4444 !important; }
+.amount-transfer { color: #3B82F6 !important; }
+.amount-refund { color: #0EA5E9 !important; }
+.amount-adjustment { color: #8B5CF6 !important; }
+
+/* Account Cards */
+.account-card {
+  border-left: 5px solid var(--primary);
+  transition: transform 0.15s ease;
+}
+.account-card:hover {
+  transform: translateY(-2px);
+}
+
+/* Tables & Forms */
+.table-custom {
+  color: var(--text-primary);
+  margin-bottom: 0;
+}
+.table-custom thead th {
+  background: var(--bg-subtle);
+  color: var(--text-secondary);
+  font-weight: 600;
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--border-color);
+  padding: 0.75rem 1rem;
+}
+.table-custom tbody td {
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid var(--border-color);
+  vertical-align: middle;
+  color: var(--text-primary);
+}
+
+.form-control, .form-select {
+  background-color: var(--bg-subtle);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+  border-radius: 8px;
+}
+.form-control:focus, .form-select:focus {
+  background-color: var(--bg-surface);
+  color: var(--text-primary);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+.modal-content {
+  background-color: var(--bg-surface);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+}
+.modal-header, .modal-footer {
+  border-color: var(--border-color);
+}
+
+/* Badges */
+.badge-tx-income { background: rgba(16, 185, 129, 0.15); color: #10B981; }
+.badge-tx-expense { background: rgba(239, 68, 68, 0.15); color: #EF4444; }
+.badge-tx-transfer { background: rgba(59, 130, 246, 0.15); color: #3B82F6; }
+.badge-tx-refund { background: rgba(14, 165, 233, 0.15); color: #0EA5E9; }
+.badge-tx-adjustment { background: rgba(139, 92, 246, 0.15); color: #8B5CF6; }
+
+/* Mobile Bottom Nav */
+.mobile-bottom-nav {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--bg-surface);
+  border-top: 1px solid var(--border-color);
+  z-index: 1025;
+  padding: 0.35rem 0.5rem;
+  justify-content: space-around;
+}
+
+.mobile-nav-btn {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: 0.72rem;
+  padding: 0.35rem 0.5rem;
+  border-radius: 8px;
+}
+.mobile-nav-btn.active {
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.chart-container {
+  position: relative;
+  height: 290px;
+  width: 100%;
+}
+
+/* Responsive Breakpoints */
+@media (max-width: 991.98px) {
+  .app-sidebar {
+    transform: translateX(-100%);
+  }
+  .app-sidebar.open {
+    transform: translateX(0);
+  }
+  .app-main {
+    margin-left: 0;
+  }
+  .mobile-bottom-nav {
+    display: flex;
+  }
+  .app-content {
+    padding: 1rem;
+  }
+}
+
+@media print {
+  .app-sidebar, .app-topbar, .mobile-bottom-nav, .no-print {
+    display: none !important;
+  }
+  .app-main {
+    margin-left: 0 !important;
+  }
+}
+

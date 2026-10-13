@@ -1,0 +1,2631 @@
+<!DOCTYPE html>
+<html lang="th" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#2563EB">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Bank_bana">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+  <title>Bank_bana — ระบบจัดการการเงินส่วนบุคคล</title>
+  <!-- Google Fonts: Prompt & Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Bootstrap 5.3 CSS & Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <!-- Custom Styles -->
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+  <!-- Toast Notification Container -->
+  <div id="toastContainer" class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 2000;"></div>
+
+  <!-- =====================================================================
+       1. AUTHENTICATION SCREEN (Email + Password / 6-Digit PIN)
+       ===================================================================== -->
+  <div id="authScreenWrapper" class="auth-wrapper">
+    <div class="auth-card">
+      <div class="d-flex align-items-center justify-content-between mb-3">
+        <div class="d-flex align-items-center gap-2">
+          <div class="sidebar-brand-icon">BB</div>
+          <div>
+            <h5 class="fw-bold mb-0">Bank_bana</h5>
+            <div class="small text-muted">Google Sheets Live & Offline PWA</div>
+          </div>
+        </div>
+        <button class="btn btn-sm btn-outline-secondary" onclick="PFM_APP.toggleTheme()" title="สลับโหมดสี">
+          <i class="bi bi-moon-stars-fill"></i>
+        </button>
+      </div>
+
+      <!-- Mode Switch Tabs -->
+      <div class="btn-group w-100 mb-3" role="group">
+        <button type="button" id="tabBtnLogin" class="btn btn-primary" onclick="PFM_AUTH.switchAuthTab('login')">เข้าสู่ระบบ</button>
+        <button type="button" id="tabBtnRegister" class="btn btn-outline-secondary" onclick="PFM_AUTH.switchAuthTab('register')">สมัครใช้งานใหม่</button>
+      </div>
+
+      <!-- Login Form -->
+      <form id="authLoginForm">
+        <div class="mb-3">
+          <label class="form-label small fw-semibold">อีเมลผู้ใช้งาน (Email)</label>
+          <input type="email" id="loginEmail" class="form-control" placeholder="name@example.com" required>
+        </div>
+
+        <div class="mb-2">
+          <div class="btn-group btn-group-sm w-100" role="group">
+            <button type="button" id="btnCredPassword" class="btn btn-outline-primary active" onclick="PFM_AUTH.switchLoginCredentialMode('password')">
+              <i class="bi bi-key me-1"></i>ใช้รหัสผ่าน (Password)
+            </button>
+            <button type="button" id="btnCredPin" class="btn btn-outline-primary" onclick="PFM_AUTH.switchLoginCredentialMode('pin')">
+              <i class="bi bi-123 me-1"></i>ใช้รหัส PIN 6 หลัก
+            </button>
+          </div>
+        </div>
+
+        <div id="loginPasswordGroup" class="mb-3">
+          <label class="form-label small fw-semibold">รหัสผ่าน (Password)</label>
+          <input type="password" id="loginPassword" class="form-control" placeholder="••••••••">
+        </div>
+
+        <div id="loginPinGroup" class="mb-3 d-none">
+          <label class="form-label small fw-semibold">รหัส PIN 6 หลัก</label>
+          <input type="password" id="loginPin" class="form-control text-center fs-5" maxlength="6" pattern="\d{6}" placeholder="••••••">
+        </div>
+
+        <button type="submit" id="btnLoginSubmit" class="btn btn-primary w-100 py-2 fw-semibold">
+          <i class="bi bi-box-arrow-in-right me-2"></i>เข้าสู่ระบบ
+        </button>
+
+        <div class="mt-3 pt-3 border-top d-flex justify-content-between align-items-center small">
+          <span class="text-muted">ต้องการทดสอบด้วยบัญชีตัวอย่าง?</span>
+          <button type="button" class="btn btn-sm btn-link text-decoration-none p-0" onclick="PFM_AUTH.fillDemoAccount()">
+            กรอกบัญชี Demo (`demo@pfm.local`)
+          </button>
+        </div>
+      </form>
+
+      <!-- Register Form -->
+      <form id="authRegisterForm" class="d-none">
+        <div class="mb-2">
+          <label class="form-label small fw-semibold">ชื่อ-นามสกุล หรือชื่อเรียก</label>
+          <input type="text" id="regFullName" class="form-control" placeholder="เช่น คุณสมชาย ใจดี" required>
+        </div>
+        <div class="mb-2">
+          <label class="form-label small fw-semibold">อีเมล (Email)</label>
+          <input type="email" id="regEmail" class="form-control" placeholder="you@example.com" required>
+        </div>
+        <div class="row g-2 mb-2">
+          <div class="col-7">
+            <label class="form-label small fw-semibold">รหัสผ่าน (ขั้นต่ำ 6 ตัว)</label>
+            <input type="password" id="regPassword" class="form-control" minlength="6" required>
+          </div>
+          <div class="col-5">
+            <label class="form-label small fw-semibold">PIN 6 หลัก (ถ้ามี)</label>
+            <input type="password" id="regPin" class="form-control" maxlength="6" placeholder="123456">
+          </div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label small fw-semibold">สกุลเงินหลัก (Base Currency)</label>
+          <select id="regCurrency" class="form-select">
+            <option value="THB" selected>THB - บาทไทย (฿)</option>
+            <option value="USD">USD - ดอลลาร์สหรัฐ ($)</option>
+            <option value="EUR">EUR - ยูโร (€)</option>
+            <option value="JPY">JPY - เยนญี่ปุ่น (¥)</option>
+          </select>
+        </div>
+        <button type="submit" id="btnRegisterSubmit" class="btn btn-success w-100 py-2 fw-semibold">
+          <i class="bi bi-person-plus me-2"></i>สมัครสมาชิกและเข้าใช้งาน
+        </button>
+      </form>
+
+      <!-- GAS API Endpoint Quick Config -->
+      <div class="mt-3 pt-2 border-top">
+        <a class="small text-muted text-decoration-none d-block" data-bs-toggle="collapse" href="#authApiCollapse">
+          <i class="bi bi-gear me-1"></i>ตั้งค่าการเชื่อมต่อ Google Apps Script API URL
+        </a>
+        <div class="collapse mt-2" id="authApiCollapse">
+          <div class="input-group input-group-sm">
+            <input type="text" id="authApiEndpointInput" class="form-control" placeholder="https://script.google.com/macros/s/.../exec หรือ /api">
+            <button class="btn btn-outline-primary" type="button" onclick="PFM_APP.saveAuthApiEndpoint()">บันทึก</button>
+          </div>
+          <div class="form-text small">ค่าเริ่มต้น `/api` เชื่อมต่อตรงกับ Google Sheets จริงผ่าน Live Bridge หรือใส่ URL Web App ของ GAS</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =====================================================================
+       2. MAIN APPLICATION SHELL
+       ===================================================================== -->
+  <div id="appShellWrapper" class="app-layout d-none">
+    <!-- Sidebar Navigation -->
+    <aside id="appSidebar" class="app-sidebar">
+      <div class="sidebar-brand">
+        <div class="sidebar-brand-icon">BB</div>
+        <div>
+          <div class="fw-bold">Bank_bana</div>
+          <div class="small text-secondary" style="font-size: 0.75rem;">Phase 1–4 • Live & Offline</div>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <div class="small text-uppercase text-secondary px-3 mb-2" style="font-size: 0.72rem; letter-spacing: 0.05em;">Core Modules (Phase 1)</div>
+        <button id="nav-dashboard" class="nav-item-btn active" onclick="PFM_APP.navigateTo('dashboard')">
+          <i class="bi bi-grid-1x2-fill"></i> ภาพรวม (Dashboard)
+        </button>
+        <button id="nav-transactions" class="nav-item-btn" onclick="PFM_APP.navigateTo('transactions')">
+          <i class="bi bi-arrow-left-right"></i> ธุรกรรม (Transactions)
+        </button>
+        <button id="nav-accounts" class="nav-item-btn" onclick="PFM_APP.navigateTo('accounts')">
+          <i class="bi bi-wallet2"></i> บัญชีการเงิน (Accounts)
+        </button>
+        <button id="nav-categories" class="nav-item-btn" onclick="PFM_APP.navigateTo('categories')">
+          <i class="bi bi-tags-fill"></i> หมวดหมู่ (Categories)
+        </button>
+
+        <div class="small text-uppercase text-secondary px-3 mt-3 mb-2" style="font-size: 0.72rem; letter-spacing: 0.05em;">Planning & Analytics (Phase 2)</div>
+        <button id="nav-budgets" class="nav-item-btn" onclick="PFM_APP.navigateTo('budgets')">
+          <i class="bi bi-pie-chart-fill"></i> งบประมาณ (Budgets)
+        </button>
+        <button id="nav-goals" class="nav-item-btn" onclick="PFM_APP.navigateTo('goals')">
+          <i class="bi bi-bullseye"></i> เป้าหมายการออม (Goals)
+        </button>
+        <button id="nav-recurring" class="nav-item-btn" onclick="PFM_APP.navigateTo('recurring')">
+          <i class="bi bi-arrow-repeat"></i> รายการประจำ (Recurring)
+        </button>
+        <button id="nav-reports" class="nav-item-btn" onclick="PFM_APP.navigateTo('reports')">
+          <i class="bi bi-bar-chart-line-fill"></i> รายงาน & วิเคราะห์ (Reports)
+        </button>
+
+        <div class="small text-uppercase text-secondary px-3 mt-3 mb-2" style="font-size: 0.72rem; letter-spacing: 0.05em;">Liabilities & Alerts (Phase 3)</div>
+        <button id="nav-debts" class="nav-item-btn" onclick="PFM_APP.navigateTo('debts')">
+          <i class="bi bi-bank2"></i> หนี้สิน & บัตรเครดิต (Debts)
+        </button>
+        <button id="nav-bills" class="nav-item-btn" onclick="PFM_APP.navigateTo('bills')">
+          <i class="bi bi-receipt-cutoff"></i> บิล & นำเข้าข้อมูล (Bills/CSV)
+        </button>
+        <button id="nav-notifications" class="nav-item-btn d-flex justify-content-between align-items-center" onclick="PFM_APP.navigateTo('notifications')">
+          <span><i class="bi bi-bell-fill me-2"></i> การแจ้งเตือน (Alerts)</span>
+          <span id="sidebarNotifBadge" class="badge rounded-pill bg-danger d-none">0</span>
+        </button>
+
+        <div class="small text-uppercase text-secondary px-3 mt-3 mb-2" style="font-size: 0.72rem; letter-spacing: 0.05em;">Smart Finance (Phase 4)</div>
+        <button id="nav-automation" class="nav-item-btn" onclick="PFM_APP.navigateTo('automation')">
+          <i class="bi bi-stars"></i> อัจฉริยะ & กฎอัตโนมัติ (Smart)
+        </button>
+
+        <div class="small text-uppercase text-secondary px-3 mt-3 mb-2" style="font-size: 0.72rem; letter-spacing: 0.05em;">System & Roadmap</div>
+        <button id="nav-settings" class="nav-item-btn" onclick="PFM_APP.navigateTo('settings')">
+          <i class="bi bi-shield-lock-fill"></i> ตั้งค่า & สำรองข้อมูล
+        </button>
+        <button id="nav-roadmap" class="nav-item-btn" onclick="PFM_APP.navigateTo('roadmap')">
+          <i class="bi bi-layers-fill"></i> สถานะ Phase 1–4
+        </button>
+      </nav>
+
+      <div class="p-3 border-top border-secondary border-opacity-25">
+        <button class="btn btn-outline-light btn-sm w-100" onclick="PFM_AUTH.logout()">
+          <i class="bi bi-box-arrow-right me-1"></i>ออกจากระบบ
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Content Column -->
+    <div class="app-main">
+      <!-- Topbar -->
+      <header class="app-topbar">
+        <div class="d-flex align-items-center gap-2">
+          <button class="btn btn-sm btn-outline-secondary d-lg-none" onclick="PFM_APP.toggleMobileSidebar()">
+            <i class="bi bi-list fs-5"></i>
+          </button>
+          <div>
+            <div id="topbarUserName" class="fw-bold">ผู้ใช้งาน</div>
+            <div id="topbarUserEmail" class="small text-muted">user@example.com</div>
+          </div>
+        </div>
+
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+          <span id="networkStatusBadge" class="badge rounded-pill bg-success bg-opacity-10 text-success border border-success d-flex align-items-center gap-1">
+            <i class="bi bi-cloud-check-fill"></i><span class="d-none d-md-inline">ออนไลน์</span>
+          </span>
+          <button id="btnSyncOutbox" class="btn btn-sm btn-warning d-none" onclick="PFM_OFFLINE.syncOutbox()" title="มีรายการที่จดไว้ตอนออฟไลน์รอซิงก์ขึ้น Google Sheets">
+            <i class="bi bi-arrow-repeat me-1"></i>รอซิงก์ (<span id="outboxQueueCount">0</span>)
+          </button>
+          <button id="btnToggleOfflineMode" class="btn btn-sm btn-outline-secondary" onclick="PFM_OFFLINE.toggleForceOffline()" title="สลับโหมดออฟไลน์/ออนไลน์เพื่อใช้งานหรือทดสอบโดยไม่ใช้เน็ต">
+            <i class="bi bi-wifi-off me-1"></i><span class="d-none d-lg-inline">ทดสอบออฟไลน์</span>
+          </button>
+          <button id="btnInstallPwa" class="btn btn-sm btn-outline-primary" onclick="PFM_OFFLINE.promptInstallPwa()" title="ติดตั้งเว็บแอปลงมือถือหรือคอมพิวเตอร์">
+            <i class="bi bi-download me-1"></i><span class="d-none d-md-inline">ติดตั้งแอป</span>
+          </button>
+          <button class="btn btn-sm btn-primary" onclick="PFM_TRANSACTIONS.openCreateModal('expense')">
+            <i class="bi bi-plus-lg me-1"></i><span class="d-none d-sm-inline">จดธุรกรรม</span>
+          </button>
+          <button class="btn btn-sm btn-outline-secondary position-relative" onclick="PFM_APP.navigateTo('notifications')" title="ศูนย์การแจ้งเตือนอัจฉริยะ">
+            <i class="bi bi-bell-fill"></i>
+            <span id="topbarNotifBadge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none" style="font-size: 0.65rem;">0</span>
+          </button>
+          <button class="btn btn-sm btn-outline-secondary" onclick="PFM_APP.toggleTheme()" title="สลับ Light / Dark Mode">
+            <i id="themeToggleIcon" class="bi bi-moon-stars-fill"></i>
+          </button>
+        </div>
+      </header>
+
+      <!-- Views Container -->
+      <main class="app-content">
+
+        <!-- ===============================================================
+             VIEW 1: DASHBOARD (Module A)
+             =============================================================== -->
+        <section id="view-dashboard">
+          <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+            <div>
+              <h4 class="fw-bold mb-0">แดชบอร์ดสรุปสถานะการเงิน (Dashboard)</h4>
+              <div class="small text-muted">คำนวณแบบเรียลไทม์จาก Google Sheets จริง (ไม่นับการโอนเงินซ้ำเป็นรายรับ/รายจ่าย)</div>
+            </div>
+            <div class="d-flex gap-2">
+              <button class="btn btn-sm btn-outline-secondary" onclick="PFM_DASHBOARD.resetFiltersToCurrentMonth()">
+                <i class="bi bi-calendar-check me-1"></i>เดือนปัจจุบัน
+              </button>
+              <button class="btn btn-sm btn-outline-primary" onclick="PFM_DASHBOARD.loadDashboard()">
+                <i class="bi bi-arrow-clockwise me-1"></i>รีเฟรชข้อมูลจริง
+              </button>
+            </div>
+          </div>
+
+          <!-- Dashboard Filters -->
+          <form id="dashboardFilterForm" class="surface-card mb-4">
+            <div class="row g-2 align-items-end">
+              <div class="col-6 col-md-2">
+                <label class="form-label small mb-1">ตั้งแต่วันที่</label>
+                <input type="date" id="dashFilterStart" class="form-control form-control-sm">
+              </div>
+              <div class="col-6 col-md-2">
+                <label class="form-label small mb-1">ถึงวันที่</label>
+                <input type="date" id="dashFilterEnd" class="form-control form-control-sm">
+              </div>
+              <div class="col-6 col-md-3">
+                <label class="form-label small mb-1">บัญชี</label>
+                <select id="dashFilterAccount" class="form-select form-select-sm">
+                  <option value="">ทุกบัญชี</option>
+                </select>
+              </div>
+              <div class="col-6 col-md-2">
+                <label class="form-label small mb-1">หมวดหมู่</label>
+                <select id="dashFilterCategory" class="form-select form-select-sm">
+                  <option value="">ทุกหมวดหมู่</option>
+                </select>
+              </div>
+              <div class="col-6 col-md-1">
+                <label class="form-label small mb-1">สกุลเงิน</label>
+                <select id="dashFilterCurrency" class="form-select form-select-sm">
+                  <option value="">ทั้งหมด</option>
+                  <option value="THB">THB</option>
+                  <option value="USD">USD</option>
+                  <option value="EUR">EUR</option>
+                  <option value="JPY">JPY</option>
+                </select>
+              </div>
+              <div class="col-6 col-md-2">
+                <button type="submit" class="btn btn-sm btn-primary w-100">
+                  <i class="bi bi-funnel me-1"></i>กรองข้อมูล
+                </button>
+              </div>
+            </div>
+          </form>
+
+          <!-- KPI Summary Row -->
+          <div class="row g-3 mb-4">
+            <div class="col-12 col-sm-6 col-xl-3">
+              <div class="kpi-card">
+                <div class="kpi-label"><i class="bi bi-safe2 me-1 text-primary"></i>มูลค่าสุทธิรวม (Net Worth)</div>
+                <div id="kpiTotalBalance" class="kpi-value text-primary">฿0.00</div>
+                <div id="kpiAssetsAndLiabilities" class="small text-muted">สินทรัพย์: ฿0.00 | หนี้สิน: ฿0.00</div>
+              </div>
+            </div>
+            <div class="col-12 col-sm-6 col-xl-3">
+              <div class="kpi-card">
+                <div class="kpi-label"><i class="bi bi-arrow-down-left-circle me-1 text-success"></i>รายรับตามช่วงเวลา</div>
+                <div id="kpiPeriodIncome" class="kpi-value amount-income">฿0.00</div>
+                <div id="momIncomeDiff" class="small text-muted">-</div>
+              </div>
+            </div>
+            <div class="col-12 col-sm-6 col-xl-3">
+              <div class="kpi-card">
+                <div class="kpi-label"><i class="bi bi-arrow-up-right-circle me-1 text-danger"></i>รายจ่ายสุทธิ (หักคืนเงินแล้ว)</div>
+                <div id="kpiPeriodExpense" class="kpi-value amount-expense">฿0.00</div>
+                <div id="momExpenseDiff" class="small text-muted">-</div>
+              </div>
+            </div>
+            <div class="col-12 col-sm-6 col-xl-3">
+              <div class="kpi-card">
+                <div class="d-flex justify-content-between align-items-center">
+                  <span class="kpi-label">เงินคงเหลือสุทธิ & อัตราออม</span>
+                  <span id="kpiSavingsRate" class="badge bg-success">0.0%</span>
+                </div>
+                <div id="kpiNetCashflow" class="kpi-value">฿0.00</div>
+                <div class="progress mb-1" style="height: 6px;">
+                  <div id="kpiSavingsProgressBar" class="progress-bar bg-success" style="width: 0%"></div>
+                </div>
+                <div id="momNetDiff" class="small text-muted">-</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Account Balances Strip -->
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <h6 class="fw-bold mb-0">ยอดเงินรายบัญชี (Account Balances)</h6>
+            <button class="btn btn-sm btn-link text-decoration-none p-0" onclick="PFM_APP.navigateTo('accounts')">จัดการบัญชีทั้งหมด →</button>
+          </div>
+          <div id="dashAccountList" class="row g-3 mb-4"></div>
+
+          <!-- Charts Row -->
+          <div class="row g-3 mb-4">
+            <div class="col-12 col-lg-8">
+              <div class="surface-card h-100">
+                <h6 class="fw-bold mb-3">กราฟรายรับ-รายจ่ายและแนวโน้มย้อนหลัง 6 เดือน</h6>
+                <div class="chart-container">
+                  <canvas id="chartIncomeExpenseTrend"></canvas>
+                </div>
+              </div>
+            </div>
+            <div class="col-12 col-lg-4">
+              <div class="surface-card h-100">
+                <h6 class="fw-bold mb-3">สัดส่วนรายจ่ายตามหมวดหมู่</h6>
+                <div style="height: 210px; position: relative;">
+                  <canvas id="chartCategoryBreakdown"></canvas>
+                </div>
+                <div id="dashCategoryBreakdownList" class="mt-3"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Budgets Near Limit, Upcoming Bills & Recent Transactions -->
+          <div class="row g-3">
+            <div class="col-12 col-lg-4">
+              <div class="surface-card mb-3">
+                <h6 class="fw-bold mb-2"><i class="bi bi-pie-chart me-1 text-warning"></i>งบประมาณใกล้เต็ม (Budgets)</h6>
+                <div id="dashBudgetsNearLimit"></div>
+              </div>
+              <div class="surface-card">
+                <h6 class="fw-bold mb-2"><i class="bi bi-calendar-event me-1 text-danger"></i>รายการใกล้ครบกำหนด (Upcoming Bills)</h6>
+                <div id="dashUpcomingBills"></div>
+              </div>
+            </div>
+
+            <div class="col-12 col-lg-8">
+              <div class="surface-card h-100">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                  <h6 class="fw-bold mb-0"><i class="bi bi-clock-history me-1 text-primary"></i>ธุรกรรมล่าสุด (Recent Transactions)</h6>
+                  <button class="btn btn-sm btn-outline-primary" onclick="PFM_APP.navigateTo('transactions')">ดูทั้งหมด</button>
+                </div>
+                <div class="table-responsive">
+                  <table class="table table-custom">
+                    <thead>
+                      <tr>
+                        <th>วัน-เวลา</th>
+                        <th>ประเภท</th>
+                        <th>รายการ / หมวดหมู่</th>
+                        <th>บัญชี</th>
+                        <th class="text-end">จำนวนเงิน</th>
+                      </tr>
+                    </thead>
+                    <tbody id="dashRecentTxBody"></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ===============================================================
+             VIEW 2: TRANSACTIONS (Module B)
+             =============================================================== -->
+        <section id="view-transactions" class="d-none">
+          <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+            <div>
+              <h4 class="fw-bold mb-0">จัดการรายการธุรกรรม (Transactions)</h4>
+              <div class="small text-muted">รองรับ รายรับ รายจ่าย โอนเงิน คืนเงิน ปรับยอด พร้อมป้องกันรายการซ้ำและประวัติการแก้ไข</div>
+            </div>
+            <div class="d-flex flex-wrap gap-2">
+              <button class="btn btn-sm btn-outline-success" onclick="PFM_TRANSACTIONS.openCsvImportModal()">
+                <i class="bi bi-file-earmark-arrow-up me-1"></i>นำเข้า CSV (Preview & Dedup)
+              </button>
+              <button class="btn btn-sm btn-outline-secondary" onclick="PFM_TRANSACTIONS.exportCurrentCsv()">
+                <i class="bi bi-file-earmark-arrow-down me-1"></i>ส่งออก CSV
+              </button>
+              <button class="btn btn-sm btn-primary" onclick="PFM_TRANSACTIONS.openCreateModal('expense')">
+                <i class="bi bi-plus-lg me-1"></i>เพิ่มรายการใหม่
+              </button>
+            </div>
+          </div>
+
+          <!-- Search & Filter Bar -->
+          <form id="txFilterForm" class="surface-card mb-3">
+            <div class="row g-2 align-items-end">
+              <div class="col-12 col-md-3">
+                <label class="form-label small mb-1">ค้นหา (ร้านค้า/หมายเหตุ/แท็ก)</label>
+                <input type="text" id="txFilterSearch" class="form-control form-control-sm" placeholder="พิมพ์คำค้นหา...">
+              </div>
+              <div class="col-6 col-md-2">
+                <label class="form-label small mb-1">ประเภท</label>
+                <select id="txFilterType" class="form-select form-select-sm">
+                  <option value="">ทุกประเภท</option>
+                  <option value="income">รายรับ (Income)</option>
+                  <option value="expense">รายจ่าย (Expense)</option>
+                  <option value="transfer">โอนเงิน (Transfer)</option>
+                  <option value="refund">คืนเงิน (Refund)</option>
+                  <option value="adjustment">ปรับยอด (Adjustment)</option>
+                </select>
+              </div>
+              <div class="col-6 col-md-2">
+                <label class="form-label small mb-1">บัญชี</label>
+                <select id="txFilterAccount" class="form-select form-select-sm">
+                  <option value="">ทุกบัญชี</option>
+                </select>
+              </div>
+              <div class="col-6 col-md-2">
+                <label class="form-label small mb-1">หมวดหมู่</label>
+                <select id="txFilterCategory" class="form-select form-select-sm">
+                  <option value="">ทุกหมวดหมู่</option>
+                </select>
+              </div>
+              <div class="col-6 col-md-3">
+                <label class="form-label small mb-1">สถานะรายการ</label>
+                <select id="txFilterStatus" class="form-select form-select-sm">
+                  <option value="ALL_ACTIVE" selected>เฉพาะรายการที่ใช้งาน (ไม่รวมที่ยกเลิก)</option>
+                  <option value="ALL">แสดงทั้งหมด (รวมรายการที่ยกเลิกแล้ว)</option>
+                  <option value="voided">เฉพาะรายการที่ยกเลิก (Voided)</option>
+                </select>
+              </div>
+              <div class="col-6 col-md-2">
+                <label class="form-label small mb-1">ตั้งแต่วันที่</label>
+                <input type="date" id="txFilterStart" class="form-control form-control-sm">
+              </div>
+              <div class="col-6 col-md-2">
+                <label class="form-label small mb-1">ถึงวันที่</label>
+                <input type="date" id="txFilterEnd" class="form-control form-control-sm">
+              </div>
+              <div class="col-6 col-md-2">
+                <label class="form-label small mb-1">เรียงตาม</label>
+                <select id="txFilterSortBy" class="form-select form-select-sm">
+                  <option value="tx_date" selected>วันที่ทำรายการ</option>
+                  <option value="amount">จำนวนเงิน</option>
+                  <option value="merchant">ชื่อร้านค้า/รายการ</option>
+                </select>
+              </div>
+              <div class="col-6 col-md-2">
+                <label class="form-label small mb-1">ลำดับ</label>
+                <select id="txFilterSortDir" class="form-select form-select-sm">
+                  <option value="desc" selected>ใหม่สุด → เก่าสุด / มาก → น้อย</option>
+                  <option value="asc">เก่าสุด → ใหม่สุด / น้อย → มาก</option>
+                </select>
+              </div>
+              <div class="col-12 col-md-4 d-flex gap-2">
+                <button type="submit" class="btn btn-sm btn-primary flex-grow-1">
+                  <i class="bi bi-search me-1"></i>ค้นหา / กรอง
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="PFM_TRANSACTIONS.resetFilters()">
+                  ล้างตัวกรอง
+                </button>
+              </div>
+            </div>
+          </form>
+
+          <!-- Transactions Table -->
+          <div class="surface-card">
+            <div class="table-responsive">
+              <table class="table table-custom">
+                <thead>
+                  <tr>
+                    <th>วัน-เวลา</th>
+                    <th>ประเภท</th>
+                    <th>รายละเอียด / แท็ก / ใบเสร็จ</th>
+                    <th>หมวดหมู่หลัก / ย่อย</th>
+                    <th>บัญชี</th>
+                    <th class="text-end">จำนวนเงิน</th>
+                    <th class="text-end">จัดการ</th>
+                  </tr>
+                </thead>
+                <tbody id="txTableBody"></tbody>
+              </table>
+            </div>
+            <div class="d-flex justify-content-between align-items-center pt-3 border-top mt-2">
+              <div id="txPaginationInfo" class="small text-muted">กำลังโหลด...</div>
+              <div id="txPaginationControls" class="d-flex gap-2"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ===============================================================
+             VIEW 3: ACCOUNTS (Module C)
+             =============================================================== -->
+        <section id="view-accounts" class="d-none">
+          <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+            <div>
+              <h4 class="fw-bold mb-0">จัดการบัญชีการเงิน (Accounts)</h4>
+              <div class="small text-muted">รองรับ เงินสด ธนาคาร E-Wallet บัตรเครดิต พอร์ตลงทุน หลายสกุลเงิน และการกระทบยอด</div>
+            </div>
+            <div class="d-flex gap-2">
+              <button class="btn btn-sm btn-outline-primary" onclick="PFM_TRANSACTIONS.openCreateModal('transfer')">
+                <i class="bi bi-arrow-left-right me-1"></i>โอนเงินระหว่างบัญชี
+              </button>
+              <button class="btn btn-sm btn-primary" onclick="PFM_ACCOUNTS.openCreateModal()">
+                <i class="bi bi-plus-lg me-1"></i>เพิ่มบัญชีใหม่
+              </button>
+            </div>
+          </div>
+
+          <div id="accountsGridContainer" class="row g-3"></div>
+        </section>
+
+        <!-- ===============================================================
+             VIEW 4: CATEGORIES
+             =============================================================== -->
+        <section id="view-categories" class="d-none">
+          <div class="row g-3">
+            <div class="col-12 col-lg-4">
+              <div class="surface-card">
+                <h5 class="fw-bold mb-3">เพิ่มหมวดหมู่หลัก / หมวดหมู่ย่อย</h5>
+                <form id="categoryCreateForm">
+                  <div class="mb-2">
+                    <label class="form-label small">ชื่อหมวดหมู่</label>
+                    <input type="text" id="newCatName" class="form-control" placeholder="เช่น ค่ากาแฟ, เงินปันผลหุ้น" required>
+                  </div>
+                  <div class="mb-2">
+                    <label class="form-label small">ประเภท</label>
+                    <select id="newCatType" class="form-select">
+                      <option value="expense">รายจ่าย (Expense)</option>
+                      <option value="income">รายรับ (Income)</option>
+                    </select>
+                  </div>
+                  <div class="mb-2">
+                    <label class="form-label small">อยู่ภายใต้หมวดหมู่หลัก (ถ้าเป็นหมวดหมู่ย่อย)</label>
+                    <select id="newCatParent" class="form-select"></select>
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label small">สีสัญลักษณ์</label>
+                    <input type="color" id="newCatColor" class="form-control form-control-color w-100" value="#3B82F6">
+                  </div>
+                  <button type="submit" class="btn btn-primary w-100">บันทึกหมวดหมู่</button>
+                </form>
+              </div>
+            </div>
+            <div class="col-12 col-lg-8">
+              <div class="surface-card">
+                <h5 class="fw-bold mb-3">รายการหมวดหมู่ทั้งหมด</h5>
+                <div class="table-responsive">
+                  <table class="table table-custom">
+                    <thead>
+                      <tr>
+                        <th>ชื่อหมวดหมู่</th>
+                        <th>ประเภท</th>
+                        <th>หมวดหมู่หลัก</th>
+                        <th>รูปแบบ</th>
+                      </tr>
+                    </thead>
+                    <tbody id="categoriesTableBody"></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ===============================================================
+             VIEW 5: SETTINGS, SECURITY, BACKUP & AUDIT LOGS (Module K)
+             =============================================================== -->
+        <section id="view-settings" class="d-none">
+          <h4 class="fw-bold mb-3">ตั้งค่าระบบ ความปลอดภัย และการสำรองข้อมูล (Settings & Security)</h4>
+
+          <div class="row g-3">
+            <!-- Profile & Security -->
+            <div class="col-12 col-lg-6">
+              <div class="surface-card h-100">
+                <h5 class="fw-bold mb-3"><i class="bi bi-person-lock me-2 text-primary"></i>ข้อมูลผู้ใช้และรหัสผ่าน / PIN</h5>
+                <form id="settingsProfileForm">
+                  <div class="mb-2">
+                    <label class="form-label small">อีเมลบัญชี (ไม่สามารถเปลี่ยนได้)</label>
+                    <input type="email" id="profEmail" class="form-control" disabled>
+                  </div>
+                  <div class="mb-2">
+                    <label class="form-label small">ชื่อ-นามสกุล</label>
+                    <input type="text" id="profFullName" class="form-control" required>
+                  </div>
+                  <div class="row g-2 mb-3">
+                    <div class="col-6">
+                      <label class="form-label small">สกุลเงินหลัก</label>
+                      <select id="profBaseCurrency" class="form-select">
+                        <option value="THB">THB</option>
+                        <option value="USD">USD</option>
+                        <option value="EUR">EUR</option>
+                        <option value="JPY">JPY</option>
+                      </select>
+                    </div>
+                    <div class="col-6">
+                      <label class="form-label small">เขตเวลา (Time Zone)</label>
+                      <input type="text" id="profTimezone" class="form-control" value="Asia/Bangkok">
+                    </div>
+                  </div>
+
+                  <hr>
+                  <h6 class="fw-bold small text-uppercase text-muted">เปลี่ยนรหัสผ่าน / ตั้งรหัส PIN 6 หลัก</h6>
+                  <div class="mb-2">
+                    <label class="form-label small">รหัสผ่านปัจจุบัน (กรอกเมื่อต้องการเปลี่ยนรหัสผ่าน)</label>
+                    <input type="password" id="profCurrentPassword" class="form-control">
+                  </div>
+                  <div class="row g-2 mb-3">
+                    <div class="col-7">
+                      <label class="form-label small">รหัสผ่านใหม่</label>
+                      <input type="password" id="profNewPassword" class="form-control" minlength="6">
+                    </div>
+                    <div class="col-5">
+                      <label class="form-label small">ตั้งรหัส PIN 6 หลักใหม่</label>
+                      <input type="password" id="profNewPin" class="form-control" maxlength="6" placeholder="6 หลัก">
+                    </div>
+                  </div>
+                  <button type="submit" id="btnSaveProfile" class="btn btn-primary">บันทึกการเปลี่ยนแปลง</button>
+                </form>
+              </div>
+            </div>
+
+            <!-- API Connection & Backup/Restore -->
+            <div class="col-12 col-lg-6">
+              <div class="surface-card mb-3">
+                <h5 class="fw-bold mb-2"><i class="bi bi-cloud-check me-2 text-success"></i>การเชื่อมต่อ Google Apps Script & Google Sheets</h5>
+                <div class="small text-muted mb-2">
+                  Spreadsheet ID จริงที่เชื่อมต่ออยู่: <code>15B_GJFBZjTEOhTeK89ZP0yWEosRbzMZ9Qx3hexa-I7A</code>
+                </div>
+                <form id="apiEndpointForm">
+                  <label class="form-label small">Backend API Endpoint URL</label>
+                  <div class="input-group mb-2">
+                    <input type="text" id="settingApiEndpoint" class="form-control" placeholder="/api หรือ https://script.google.com/macros/s/.../exec">
+                    <button class="btn btn-outline-primary" type="submit">บันทึก URL</button>
+                  </div>
+                </form>
+              </div>
+
+              <div class="surface-card">
+                <h5 class="fw-bold mb-2"><i class="bi bi-database-check me-2 text-info"></i>สำรองและกู้คืนข้อมูล (Backup & Restore)</h5>
+                <p class="small text-muted">ส่งออกข้อมูลเฉพาะบัญชีผู้ใช้ของคุณจาก Google Sheets เป็นไฟล์ JSON หรือนำเข้าเพื่อกู้คืนข้อมูล</p>
+                <div class="d-flex flex-wrap gap-2">
+                  <button class="btn btn-outline-primary" onclick="PFM_APP.exportUserBackup()">
+                    <i class="bi bi-download me-1"></i>ดาวน์โหลดไฟล์ Backup (.json)
+                  </button>
+                  <label class="btn btn-outline-success mb-0">
+                    <i class="bi bi-upload me-1"></i>กู้คืนข้อมูลจากไฟล์ Backup
+                    <input type="file" id="backupRestoreInput" accept=".json" class="d-none">
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <!-- Audit Logs -->
+            <div class="col-12">
+              <div class="surface-card">
+                <h5 class="fw-bold mb-3"><i class="bi bi-shield-check me-2 text-primary"></i>บันทึกการตรวจสอบความปลอดภัย (Audit Logs)</h5>
+                <div class="table-responsive">
+                  <table class="table table-custom">
+                    <thead>
+                      <tr>
+                        <th>เวลา (UTC)</th>
+                        <th>Action</th>
+                        <th>ข้อมูลที่อ้างอิง</th>
+                        <th>รายละเอียด</th>
+                      </tr>
+                    </thead>
+                    <tbody id="auditLogsTableBody"></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ===============================================================
+             VIEW 6: BUDGETS (Module D — Phase 2)
+             =============================================================== -->
+        <section id="view-budgets" class="d-none">
+          <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+            <div>
+              <h4 class="fw-bold mb-0">จัดการงบประมาณ (Budgets)</h4>
+              <div class="small text-muted">รองรับงบรายวัน รายสัปดาห์ รายเดือน รายปี งบรวม/แยกหมวดหมู่ การยกยอด (Rollover) และแจ้งเตือนเมื่อใกล้เต็ม</div>
+            </div>
+            <div class="d-flex gap-2">
+              <button class="btn btn-sm btn-outline-secondary" onclick="PFM_BUDGETS.loadBudgets()">
+                <i class="bi bi-arrow-clockwise me-1"></i>รีเฟรช
+              </button>
+              <button class="btn btn-sm btn-primary" onclick="PFM_BUDGETS.openCreateModal()">
+                <i class="bi bi-plus-lg me-1"></i>สร้างงบประมาณใหม่
+              </button>
+            </div>
+          </div>
+
+          <div class="row g-3 mb-4">
+            <div class="col-12 col-sm-6 col-xl-3">
+              <div class="kpi-card">
+                <div class="kpi-label">วงเงินงบรวมสุทธิ (Effective Limit)</div>
+                <div id="bdgKpiTotalLimit" class="kpi-value text-primary">฿0.00</div>
+              </div>
+            </div>
+            <div class="col-12 col-sm-6 col-xl-3">
+              <div class="kpi-card">
+                <div class="kpi-label">ใช้จ่ายจริงแล้ว (Actual Spent)</div>
+                <div id="bdgKpiTotalSpent" class="kpi-value text-danger">฿0.00</div>
+              </div>
+            </div>
+            <div class="col-12 col-sm-6 col-xl-3">
+              <div class="kpi-card">
+                <div class="kpi-label">งบคงเหลือรวม (Remaining)</div>
+                <div id="bdgKpiTotalRemaining" class="kpi-value text-success">฿0.00</div>
+              </div>
+            </div>
+            <div class="col-12 col-sm-6 col-xl-3">
+              <div class="kpi-card">
+                <div class="kpi-label">งบที่ใกล้เต็ม / เกินงบ</div>
+                <div id="bdgKpiAlertCount" class="kpi-value text-warning">0 รายการ</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="surface-card mb-4">
+            <h6 class="fw-bold mb-3">เปรียบเทียบงบประมาณที่ตั้งไว้ กับ รายจ่ายจริง (Budget vs Actual)</h6>
+            <div style="height: 220px; position: relative;">
+              <canvas id="chartBudgetVsActual"></canvas>
+            </div>
+          </div>
+
+          <div id="budgetsGridContainer" class="row g-3"></div>
+        </section>
+
+        <!-- ===============================================================
+             VIEW 7: SAVINGS GOALS (Module E — Phase 2)
+             =============================================================== -->
+        <section id="view-goals" class="d-none">
+          <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+            <div>
+              <h4 class="fw-bold mb-0">เป้าหมายการออม (Savings Goals)</h4>
+              <div class="small text-muted">ติดตามความคืบหน้า คำนวณเงินออมต่อเดือนที่ต้องทำ ประมาณการวันบรรลุเป้าหมาย และประวัติการเติม/ถอนเงินออม</div>
+            </div>
+            <div class="d-flex gap-2">
+              <button class="btn btn-sm btn-outline-secondary" onclick="PFM_GOALS.loadGoals()">
+                <i class="bi bi-arrow-clockwise me-1"></i>รีเฟรช
+              </button>
+              <button class="btn btn-sm btn-primary" onclick="PFM_GOALS.openCreateModal()">
+                <i class="bi bi-plus-lg me-1"></i>ตั้งเป้าหมายใหม่
+              </button>
+            </div>
+          </div>
+
+          <div class="row g-3 mb-4">
+            <div class="col-12 col-sm-6 col-xl-3">
+              <div class="kpi-card">
+                <div class="kpi-label">ยอดเป้าหมายรวม (Total Target)</div>
+                <div id="golKpiTotalTarget" class="kpi-value text-primary">฿0.00</div>
+              </div>
+            </div>
+            <div class="col-12 col-sm-6 col-xl-3">
+              <div class="kpi-card">
+                <div class="kpi-label">ออมสะสมแล้ว (Total Saved)</div>
+                <div id="golKpiTotalSaved" class="kpi-value text-success">฿0.00</div>
+              </div>
+            </div>
+            <div class="col-12 col-sm-6 col-xl-3">
+              <div class="kpi-card">
+                <div class="kpi-label">ยอดที่ต้องออมรวมต่อเดือน</div>
+                <div id="golKpiMonthlyReq" class="kpi-value text-info">฿0.00 / เดือน</div>
+              </div>
+            </div>
+            <div class="col-12 col-sm-6 col-xl-3">
+              <div class="kpi-card">
+                <div class="kpi-label">เป้าหมายที่สำเร็จแล้ว</div>
+                <div id="golKpiCompletedCount" class="kpi-value">0 / 0 เป้าหมาย</div>
+              </div>
+            </div>
+          </div>
+
+          <div id="goalsGridContainer" class="row g-3"></div>
+        </section>
+
+        <!-- ===============================================================
+             VIEW 8: RECURRING TRANSACTIONS (Module F — Phase 2)
+             =============================================================== -->
+        <section id="view-recurring" class="d-none">
+          <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+            <div>
+              <h4 class="fw-bold mb-0">รายการรายรับ-รายจ่ายประจำ (Recurring Transactions)</h4>
+              <div class="small text-muted">แยกตารางคาดการณ์ล่วงหน้า (Forecast) ออกจากธุรกรรมที่เกิดขึ้นจริง พร้อมระบบป้องกันการรัน Trigger ซ้ำ</div>
+            </div>
+            <div class="d-flex flex-wrap gap-2">
+              <button id="btnProcessDueRecurring" class="btn btn-sm btn-success" onclick="PFM_RECURRING.processDueNow()">
+                <i class="bi bi-lightning-charge-fill me-1"></i>ประมวลผลรายการครบกำหนด (Run Trigger)
+              </button>
+              <button class="btn btn-sm btn-primary" onclick="PFM_RECURRING.openCreateModal()">
+                <i class="bi bi-plus-lg me-1"></i>เพิ่มรายการประจำใหม่
+              </button>
+            </div>
+          </div>
+
+          <div class="surface-card mb-4">
+            <h6 class="fw-bold mb-3"><i class="bi bi-calendar-range me-2 text-primary"></i>แม่แบบรายการประจำทั้งหมด (Recurring Templates)</h6>
+            <div class="table-responsive">
+              <table class="table table-custom">
+                <thead>
+                  <tr>
+                    <th>ชื่อรายการประจำ</th>
+                    <th>ประเภท</th>
+                    <th>บัญชี / หมวดหมู่</th>
+                    <th>ความถี่</th>
+                    <th>กำหนดการรัน</th>
+                    <th class="text-end">จำนวนเงิน / สถานะ</th>
+                    <th class="text-end">จัดการ</th>
+                  </tr>
+                </thead>
+                <tbody id="recurringRulesTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="row g-3">
+            <div class="col-12 col-lg-6">
+              <div class="surface-card h-100">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                  <h6 class="fw-bold mb-0"><i class="bi bi-clock-history me-2 text-warning"></i>ตารางประมาณการล่วงหน้า 90 วัน (Forecast — ยังไม่คิดรวมในยอดจริง)</h6>
+                  <span class="badge bg-warning text-dark">เฉพาะประมาณการ</span>
+                </div>
+                <div class="table-responsive">
+                  <table class="table table-custom table-sm">
+                    <thead>
+                      <tr>
+                        <th>วันที่คาดการณ์</th>
+                        <th>รายการ</th>
+                        <th>ประเภท</th>
+                        <th class="text-end">จำนวนเงิน</th>
+                      </tr>
+                    </thead>
+                    <tbody id="recurringForecastTableBody"></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+            <div class="col-12 col-lg-6">
+              <div class="surface-card h-100">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                  <h6 class="fw-bold mb-0"><i class="bi bi-check2-all me-2 text-success"></i>รายการที่สร้างเข้าบัญชีจริงแล้ว (Actual Generated)</h6>
+                  <span class="badge bg-success">ข้อมูลจริง</span>
+                </div>
+                <div class="table-responsive">
+                  <table class="table table-custom table-sm">
+                    <thead>
+                      <tr>
+                        <th>วันที่เกิดจริง</th>
+                        <th>รายการ</th>
+                        <th>Idempotency Key</th>
+                        <th class="text-end">จำนวนเงิน</th>
+                      </tr>
+                    </thead>
+                    <tbody id="recurringActualTableBody"></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ===============================================================
+             VIEW 9: REPORTS & ANALYTICS (Module H — Phase 2)
+             =============================================================== -->
+        <section id="view-reports" class="d-none">
+          <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+            <div>
+              <h4 class="fw-bold mb-0">รายงานและการวิเคราะห์ทางการเงิน (Reports & Analytics)</h4>
+              <div class="small text-muted">วิเคราะห์กระแสเงินสด มูลค่าสุทธิ เปรียบเทียบรายเดือน/ไตรมาส/ปี และแยกข้อมูลจริงออกจากข้อมูลคาดการณ์</div>
+            </div>
+            <div class="d-flex flex-wrap gap-2">
+              <button class="btn btn-sm btn-outline-success" onclick="PFM_REPORTS.exportReportCsv()">
+                <i class="bi bi-file-earmark-spreadsheet me-1"></i>Export CSV
+              </button>
+              <button class="btn btn-sm btn-outline-dark" onclick="PFM_REPORTS.printReport()">
+                <i class="bi bi-printer me-1"></i>Print / Save PDF
+              </button>
+            </div>
+          </div>
+
+          <!-- Report Filters -->
+          <form id="reportsFilterForm" class="surface-card mb-3">
+            <div class="row g-2 align-items-end">
+              <div class="col-6 col-md-2">
+                <label class="form-label small mb-1">ปีที่เปรียบเทียบ</label>
+                <select id="repFilterYear" class="form-select form-select-sm"></select>
+              </div>
+              <div class="col-6 col-md-3">
+                <label class="form-label small mb-1">ตั้งแต่วันที่</label>
+                <input type="date" id="repFilterStart" class="form-control form-control-sm">
+              </div>
+              <div class="col-6 col-md-3">
+                <label class="form-label small mb-1">ถึงวันที่</label>
+                <input type="date" id="repFilterEnd" class="form-control form-control-sm">
+              </div>
+              <div class="col-6 col-md-2">
+                <label class="form-label small mb-1">บัญชี</label>
+                <select id="repFilterAccount" class="form-select form-select-sm">
+                  <option value="">ทุกบัญชี</option>
+                </select>
+              </div>
+              <div class="col-12 col-md-2">
+                <button type="submit" class="btn btn-sm btn-primary w-100">
+                  <i class="bi bi-bar-chart me-1"></i>ประมวลผลรายงาน
+                </button>
+              </div>
+            </div>
+          </form>
+
+          <!-- Report KPIs (Actuals vs Projections Strictly Separated) -->
+          <div class="row g-3 mb-4">
+            <div class="col-12 col-lg-8">
+              <div class="surface-card h-100 border-start border-4 border-success">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                  <h6 class="fw-bold mb-0"><i class="bi bi-check-circle-fill text-success me-1"></i>ข้อมูลที่เกิดขึ้นจริง (Actual Posted Transactions Only)</h6>
+                  <span class="badge bg-success">ข้อมูลจริงจาก Google Sheets</span>
+                </div>
+                <div class="row g-2 text-center mt-1">
+                  <div class="col-6 col-md-3">
+                    <div class="small text-muted">รายรับจริง</div>
+                    <div id="repActualIncome" class="fw-bold fs-5 text-success">฿0.00</div>
+                  </div>
+                  <div class="col-6 col-md-3">
+                    <div class="small text-muted">รายจ่ายสุทธิจริง</div>
+                    <div id="repActualExpense" class="fw-bold fs-5 text-danger">฿0.00</div>
+                  </div>
+                  <div class="col-6 col-md-3">
+                    <div class="small text-muted">กระแสเงินสดสุทธิ</div>
+                    <div id="repActualNetCashflow" class="fw-bold fs-5 text-primary">฿0.00</div>
+                  </div>
+                  <div class="col-6 col-md-3">
+                    <div class="small text-muted">อัตราการออมจริง</div>
+                    <div id="repActualSavingsRate" class="fw-bold fs-5">0.0%</div>
+                  </div>
+                </div>
+                <div class="mt-2 pt-2 border-top d-flex justify-content-between small">
+                  <span>มูลค่าสุทธิรวม (Net Worth): <strong id="repNetWorthValue" class="text-primary">฿0.00</strong></span>
+                  <span id="repAssetsVsLiab" class="text-muted">สินทรัพย์: ฿0.00 | หนี้สิน: ฿0.00</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-12 col-lg-4">
+              <div class="surface-card h-100 border-start border-4 border-warning">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                  <h6 class="fw-bold mb-0"><i class="bi bi-clock-history text-warning me-1"></i>ประมาณการ 90 วันข้างหน้า</h6>
+                  <span class="badge bg-warning text-dark">แยกจากยอดจริง</span>
+                </div>
+                <div class="small text-muted mb-1">รายรับคาดการณ์ (90 วัน): <strong id="repProjIncome90d" class="text-success">฿0.00</strong></div>
+                <div class="small text-muted mb-1">รายจ่ายคาดการณ์ (90 วัน): <strong id="repProjExpense90d" class="text-danger">฿0.00</strong></div>
+                <div class="small text-muted">เงินสดสุทธิคาดการณ์: <strong id="repProjNet90d" class="text-primary">฿0.00</strong></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Comparison Chart & Table (Monthly / Quarterly / Yearly) -->
+          <div class="surface-card mb-4">
+            <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+              <h6 class="fw-bold mb-0">เปรียบเทียบแนวโน้มตามช่วงเวลา (Monthly / Quarterly / Yearly Comparison)</h6>
+              <div class="btn-group btn-group-sm">
+                <button type="button" id="btnRepComp_monthly" class="btn btn-outline-primary active" onclick="PFM_REPORTS.switchComparisonMode('monthly')">รายเดือน</button>
+                <button type="button" id="btnRepComp_quarterly" class="btn btn-outline-primary" onclick="PFM_REPORTS.switchComparisonMode('quarterly')">รายไตรมาส (Q1-Q4)</button>
+                <button type="button" id="btnRepComp_yearly" class="btn btn-outline-primary" onclick="PFM_REPORTS.switchComparisonMode('yearly')">รายปี</button>
+              </div>
+            </div>
+            <div class="row g-3">
+              <div class="col-12 col-lg-7">
+                <div style="height: 240px; position: relative;">
+                  <canvas id="chartReportComparison"></canvas>
+                </div>
+              </div>
+              <div class="col-12 col-lg-5">
+                <div class="table-responsive" style="max-height: 240px;">
+                  <table class="table table-custom table-sm">
+                    <thead>
+                      <tr>
+                        <th>งวดเวลา</th>
+                        <th class="text-end">รายรับจริง</th>
+                        <th class="text-end">รายจ่ายจริง</th>
+                        <th class="text-end">สุทธิ</th>
+                      </tr>
+                    </thead>
+                    <tbody id="repComparisonTableBody"></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Category & Account Cashflow Breakdown -->
+          <div class="row g-3 mb-4">
+            <div class="col-12 col-lg-5">
+              <div class="surface-card h-100">
+                <h6 class="fw-bold mb-3">รายงานสรุปตามหมวดหมู่ (Category Breakdown)</h6>
+                <div class="table-responsive">
+                  <table class="table table-custom table-sm">
+                    <thead>
+                      <tr>
+                        <th>หมวดหมู่</th>
+                        <th class="text-center">จำนวนรายการ</th>
+                        <th class="text-end">รายรับจริง</th>
+                        <th class="text-end">รายจ่ายจริง</th>
+                      </tr>
+                    </thead>
+                    <tbody id="repCategoryTableBody"></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+            <div class="col-12 col-lg-7">
+              <div class="surface-card h-100">
+                <h6 class="fw-bold mb-3">กระแสเงินสดตามบัญชี (Cashflow by Account)</h6>
+                <div class="table-responsive">
+                  <table class="table table-custom table-sm">
+                    <thead>
+                      <tr>
+                        <th>บัญชี</th>
+                        <th class="text-end">ยอดตั้งต้น</th>
+                        <th class="text-end">รายรับ</th>
+                        <th class="text-end">รายจ่าย</th>
+                        <th class="text-end">โอนเข้า/ออก</th>
+                        <th class="text-end">คงเหลือปัจจุบัน</th>
+                      </tr>
+                    </thead>
+                    <tbody id="repAccountTableBody"></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Budget vs Actual & Goals Summary -->
+          <div class="row g-3">
+            <div class="col-12 col-lg-6">
+              <div class="surface-card h-100">
+                <h6 class="fw-bold mb-3">เปรียบเทียบงบประมาณกับรายจ่ายจริง (Budget vs Actual)</h6>
+                <div class="table-responsive">
+                  <table class="table table-custom table-sm">
+                    <thead>
+                      <tr>
+                        <th>งบประมาณ / หมวดหมู่</th>
+                        <th class="text-end">วงเงินงบสุทธิ</th>
+                        <th class="text-end">จ่ายจริง</th>
+                        <th class="text-end">คงเหลือ (%)</th>
+                      </tr>
+                    </thead>
+                    <tbody id="repBudgetVsActualBody"></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+            <div class="col-12 col-lg-6">
+              <div class="surface-card h-100">
+                <h6 class="fw-bold mb-3">รายงานความคืบหน้าเป้าหมายการออม (Savings Goals Summary)</h6>
+                <div class="table-responsive">
+                  <table class="table table-custom table-sm">
+                    <thead>
+                      <tr>
+                        <th>เป้าหมาย</th>
+                        <th class="text-end">เป้าหมายรวม</th>
+                        <th class="text-end">ออมแล้ว (%)</th>
+                        <th class="text-end">คาดว่าจะสำเร็จ</th>
+                      </tr>
+                    </thead>
+                    <tbody id="repGoalsSummaryBody"></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ===============================================================
+             VIEW 10: DEBTS, AMORTIZATION & CREDIT CARDS (Module G — Phase 3)
+             =============================================================== -->
+        <section id="view-debts" class="d-none">
+          <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+            <div>
+              <h4 class="fw-bold mb-0">บริหารหนี้สิน สินเชื่อ และบัตรเครดิต (Debts, Amortization & Credit Cards)</h4>
+              <div class="small text-muted">คำนวณเงินต้น ดอกเบี้ย ตารางผ่อนชำระ ภาระหนี้ต่อรายได้ (DTI) และชำระยอดบัตรเครดิตแบบไม่นับรายจ่ายซ้ำ</div>
+            </div>
+            <div class="d-flex gap-2">
+              <button class="btn btn-sm btn-outline-secondary" onclick="PFM_DEBTS.loadDebts()">
+                <i class="bi bi-arrow-clockwise me-1"></i>รีเฟรช
+              </button>
+              <button class="btn btn-sm btn-primary" onclick="PFM_DEBTS.openCreateModal()">
+                <i class="bi bi-plus-lg me-1"></i>เพิ่มรายการหนี้สิน / สินเชื่อ
+              </button>
+            </div>
+          </div>
+
+          <!-- Debt & DTI KPIs -->
+          <div class="row g-3 mb-4">
+            <div class="col-12 col-sm-6 col-xl-3">
+              <div class="kpi-card">
+                <div class="kpi-label">ยอดหนี้สินเชื่อคงเหลือรวม</div>
+                <div id="dbtKpiTotalRemaining" class="kpi-value text-danger">฿0.00</div>
+              </div>
+            </div>
+            <div class="col-12 col-sm-6 col-xl-3">
+              <div class="kpi-card">
+                <div class="kpi-label">ยอดค้างชำระบัตรเครดิตรวม</div>
+                <div id="dbtKpiCreditCardOwed" class="kpi-value text-warning">฿0.00</div>
+              </div>
+            </div>
+            <div class="col-12 col-sm-6 col-xl-3">
+              <div class="kpi-card">
+                <div class="kpi-label">ภาระผ่อนชำระขั้นต่ำรวมต่อเดือน</div>
+                <div id="dbtKpiMonthlyService" class="kpi-value text-primary">฿0.00 / เดือน</div>
+              </div>
+            </div>
+            <div class="col-12 col-sm-6 col-xl-3">
+              <div class="kpi-card">
+                <div class="kpi-label">อัตราส่วนภาระหนี้ต่อรายได้ (DTI)</div>
+                <div class="d-flex align-items-center justify-content-between mt-1">
+                  <div id="dbtKpiDtiRatio" class="kpi-value mb-0">0.0%</div>
+                  <span id="dbtKpiDtiBadge" class="badge bg-success">สุขภาพหนี้ดี</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Credit Cards Cycle & Non-Duplicate Settlement Tracking -->
+          <div class="mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <h6 class="fw-bold mb-0"><i class="bi bi-credit-card-2-back me-2 text-primary"></i>ติดตามรอบบิลบัตรเครดิต วันตัดรอบ และวันครบกำหนดชำระ</h6>
+              <span class="badge bg-info text-dark">ชำระบัตรเครดิตบันทึกเป็น Transfer ไม่นับรายจ่ายซ้ำ</span>
+            </div>
+            <div id="creditCardsTrackingContainer" class="row g-3"></div>
+          </div>
+
+          <!-- Loans & Debts Table -->
+          <div class="surface-card">
+            <h6 class="fw-bold mb-3"><i class="bi bi-journal-text me-2 text-danger"></i>รายการสินเชื่อและหนี้สินระยะยาว (Loans & Installment Debts)</h6>
+            <div class="table-responsive">
+              <table class="table table-custom">
+                <thead>
+                  <tr>
+                    <th>ชื่อหนี้สิน / ผู้ให้กู้</th>
+                    <th class="text-end">เงินต้นตั้งต้น / ดอกเบี้ย</th>
+                    <th class="text-end">ยอดหนี้คงเหลือ</th>
+                    <th class="text-end">ค่างวด / กำหนดชำระ</th>
+                    <th>ชำระสะสม (เงินต้น/ดอกเบี้ย)</th>
+                    <th>สถานะ / ประมาณการปลดหนี้</th>
+                    <th class="text-end">จัดการ</th>
+                  </tr>
+                </thead>
+                <tbody id="debtsTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ===============================================================
+             VIEW 11: BILLS & STATEMENT IMPORT HISTORY (Module G & I — Phase 3)
+             =============================================================== -->
+        <section id="view-bills" class="d-none">
+          <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+            <div>
+              <h4 class="fw-bold mb-0">บิลแจ้งเตือนวันครบกำหนด & ประวัติการนำเข้าข้อมูล (Bills & Import History)</h4>
+              <div class="small text-muted">ติดตามบิลค่าน้ำ ค่าไฟ ค่าบริการรายเดือน พร้อมศูนย์นำเข้า/ส่งออกไฟล์ CSV และตรวจสอบรายการซ้ำ</div>
+            </div>
+            <div class="d-flex flex-wrap gap-2">
+              <button class="btn btn-sm btn-outline-success" onclick="PFM_BILLS.exportBillsCsv()">
+                <i class="bi bi-download me-1"></i>Export บิล CSV
+              </button>
+              <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#csvImportModal">
+                <i class="bi bi-file-earmark-arrow-up me-1"></i>นำเข้า Statement CSV
+              </button>
+              <button class="btn btn-sm btn-primary" onclick="PFM_BILLS.openCreateModal()">
+                <i class="bi bi-plus-lg me-1"></i>เพิ่มบิลแจ้งเตือนใหม่
+              </button>
+            </div>
+          </div>
+
+          <!-- Bills KPIs -->
+          <div class="row g-3 mb-4">
+            <div class="col-12 col-sm-6 col-xl-3">
+              <div class="kpi-card">
+                <div class="kpi-label">บิลที่เกินกำหนดชำระ (Overdue)</div>
+                <div id="bilKpiOverdue" class="kpi-value text-danger">฿0.00 (0 บิล)</div>
+              </div>
+            </div>
+            <div class="col-12 col-sm-6 col-xl-3">
+              <div class="kpi-card">
+                <div class="kpi-label">บิลใกล้ครบกำหนดชำระ (Due Soon)</div>
+                <div id="bilKpiDueSoon" class="kpi-value text-warning">฿0.00 (0 บิล)</div>
+              </div>
+            </div>
+            <div class="col-12 col-sm-6 col-xl-3">
+              <div class="kpi-card">
+                <div class="kpi-label">ยอดบิลค้างชำระรวมทั้งหมด</div>
+                <div id="bilKpiUnpaidTotal" class="kpi-value text-primary">฿0.00</div>
+              </div>
+            </div>
+            <div class="col-12 col-sm-6 col-xl-3">
+              <div class="kpi-card">
+                <div class="kpi-label">ชำระแล้วในเดือนนี้</div>
+                <div id="bilKpiPaidMonth" class="kpi-value text-success">฿0.00</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bills Table -->
+          <div class="surface-card mb-4">
+            <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+              <h6 class="fw-bold mb-0"><i class="bi bi-calendar-event me-2 text-primary"></i>รายการบิลและกำหนดชำระทั้งหมด (Bills Schedule)</h6>
+              <div class="d-flex align-items-center gap-2">
+                <select id="bilFilterStatus" class="form-select form-select-sm" style="width: auto;" onchange="PFM_BILLS.loadBillsAndImports()">
+                  <option value="">ทุกสถานะ</option>
+                  <option value="overdue">เฉพาะเกินกำหนด (Overdue)</option>
+                  <option value="unpaid">รอชำระ (Unpaid)</option>
+                  <option value="paid">ชำระแล้ว (Paid)</option>
+                </select>
+              </div>
+            </div>
+            <div class="table-responsive">
+              <table class="table table-custom">
+                <thead>
+                  <tr>
+                    <th>ชื่อบิล / รายละเอียด</th>
+                    <th>หมวดหมู่</th>
+                    <th>วันครบกำหนด</th>
+                    <th>รอบความถี่</th>
+                    <th class="text-end">จำนวนเงิน</th>
+                    <th>สถานะ</th>
+                    <th class="text-end">จัดการ</th>
+                  </tr>
+                </thead>
+                <tbody id="billsTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Import History & Bank Integration Security Policy (Module I) -->
+          <div class="row g-3">
+            <div class="col-12 col-lg-8">
+              <div class="surface-card h-100">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                  <h6 class="fw-bold mb-0"><i class="bi bi-clock-history me-2 text-success"></i>ประวัติการนำเข้าไฟล์ Statement (Import_History Sheet)</h6>
+                  <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#csvImportModal">
+                    <i class="bi bi-upload me-1"></i>นำเข้าไฟล์ใหม่
+                  </button>
+                </div>
+                <div class="table-responsive">
+                  <table class="table table-custom table-sm">
+                    <thead>
+                      <tr>
+                        <th>วัน-เวลาที่นำเข้า</th>
+                        <th>ชื่อไฟล์</th>
+                        <th>บัญชีที่นำเข้า</th>
+                        <th class="text-center">ทั้งหมด</th>
+                        <th class="text-center">นำเข้าสำเร็จ</th>
+                        <th class="text-center">ข้ามรายการซ้ำ</th>
+                        <th>สถานะ</th>
+                      </tr>
+                    </thead>
+                    <tbody id="importHistoryTableBody"></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+            <div class="col-12 col-lg-4">
+              <div class="surface-card h-100 border-start border-4 border-info">
+                <h6 class="fw-bold mb-2"><i class="bi bi-shield-check me-2 text-info"></i>นโยบายความปลอดภัยการนำเข้าข้อมูลธนาคาร</h6>
+                <ul class="small text-muted mb-0 ps-3">
+                  <li class="mb-1"><strong>Zero Bank Credential Policy:</strong> ระบบไม่ขอและไม่จัดเก็บ PIN, OTP หรือรหัสผ่านแอปธนาคารใดๆ ทั้งสิ้น</li>
+                  <li class="mb-1"><strong>Safe Statement CSV Import:</strong> รองรับการนำเข้าไฟล์ CSV จากแอปธนาคาร พร้อมหน้าจอ Preview ตรวจสอบความถูกต้องและคัดกรองรายการซ้ำด้วย <code>dedup_hash</code> อัตโนมัติ</li>
+                  <li><strong>Bank API Integration:</strong> ปิดการเชื่อมต่อ API ภายนอกไว้ตามที่ผู้ใช้กำหนด เพื่อความปลอดภัยสูงสุดของบัญชีส่วนตัว</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ===============================================================
+             VIEW 12: SMART NOTIFICATIONS CENTER (Phase 3)
+             =============================================================== -->
+        <section id="view-notifications" class="d-none">
+          <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+            <div>
+              <h4 class="fw-bold mb-0">ศูนย์การแจ้งเตือนอัจฉริยะ (Smart Notifications & Alerts)</h4>
+              <div class="small text-muted">แจ้งเตือนบิลใกล้ครบกำหนด/เกินกำหนด งบประมาณใกล้เต็ม ยอดบัตรเครดิต และอัตราส่วนภาระหนี้ (บันทึกในชีต Notifications)</div>
+            </div>
+            <div class="d-flex flex-wrap gap-2">
+              <button id="btnGenerateAlerts" class="btn btn-sm btn-primary" onclick="PFM_NOTIFICATIONS.generateSmartAlerts()">
+                <i class="bi bi-radar me-1"></i>สแกนตรวจจับการแจ้งเตือนจากข้อมูลจริง
+              </button>
+              <button class="btn btn-sm btn-outline-secondary" onclick="PFM_NOTIFICATIONS.markAsRead('', true)">
+                <i class="bi bi-check2-all me-1"></i>อ่านทั้งหมดแล้ว (Mark All Read)
+              </button>
+            </div>
+          </div>
+
+          <div class="surface-card">
+            <div id="notificationsListContainer"></div>
+          </div>
+        </section>
+
+        <!-- ===============================================================
+             VIEW 13: SMART FINANCE & AUTOMATION (Module J — Phase 4)
+             =============================================================== -->
+        <section id="view-automation" class="d-none">
+          <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+            <div>
+              <h4 class="fw-bold mb-0"><i class="bi bi-stars text-primary me-1"></i>ระบบการเงินอัจฉริยะและกฎอัตโนมัติ (Smart Finance & Automation)</h4>
+              <div class="small text-muted">คาดการณ์กระแสเงินสด 30/60/90 วัน ตรวจจับค่าใช้จ่ายผิดปกติ จัดหมวดหมู่อัตโนมัติ (Rules Sheet) และแจ้งเตือนผ่าน Email / Google Calendar</div>
+            </div>
+            <div class="d-flex flex-wrap gap-2">
+              <button class="btn btn-sm btn-outline-secondary" onclick="PFM_AUTOMATION.loadAll()">
+                <i class="bi bi-arrow-clockwise me-1"></i>ประมวลผลข้อมูลใหม่
+              </button>
+              <button class="btn btn-sm btn-primary" onclick="PFM_AUTOMATION.openRuleModal()">
+                <i class="bi bi-plus-lg me-1"></i>เพิ่มกฎจัดหมวดหมู่อัตโนมัติ
+              </button>
+            </div>
+          </div>
+
+          <!-- 1. 30 / 60 / 90-Day Cashflow Forecast Cards -->
+          <div class="mb-4">
+            <h6 class="fw-bold mb-2"><i class="bi bi-graph-up-arrow me-2 text-primary"></i>พยากรณ์กระแสเงินสดและสภาพคล่องล่วงหน้า (30 / 60 / 90-Day Cashflow Forecast)</h6>
+            <div id="cashflowForecastCards" class="row g-3"></div>
+          </div>
+
+          <!-- 2. Spending Anomaly Detection & Risk Radar -->
+          <div class="row g-3 mb-4">
+            <div class="col-12 col-lg-7">
+              <div class="surface-card h-100">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                  <h6 class="fw-bold mb-0"><i class="bi bi-activity me-2 text-danger"></i>วิเคราะห์แนวโน้มและตรวจจับค่าใช้จ่ายผิดปกติ (Anomaly Detection)</h6>
+                  <span id="anomalyCountBadge" class="badge bg-success">กำลังวิเคราะห์...</span>
+                </div>
+                <div class="table-responsive">
+                  <table class="table table-custom table-sm align-middle">
+                    <thead>
+                      <tr>
+                        <th class="ps-3">หมวดหมู่</th>
+                        <th class="text-end">จ่ายเดือนนี้</th>
+                        <th class="text-end">ค่าเฉลี่ยย้อนหลัง</th>
+                        <th class="text-center">สถานะความผิดปกติ</th>
+                        <th class="pe-3">คำแนะนำ</th>
+                      </tr>
+                    </thead>
+                    <tbody id="anomalyTableBody"></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-12 col-lg-5">
+              <div class="surface-card h-100">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                  <h6 class="fw-bold mb-0"><i class="bi bi-radar me-2 text-warning"></i>เรดาร์ความเสี่ยงงบประมาณและเป้าหมายการออม (Risk Radar)</h6>
+                  <span class="badge bg-warning text-dark">ตรวจจับอัตโนมัติ</span>
+                </div>
+                <div id="smartRiskRadarList"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3. Auto-Categorization Rules Engine (Rules Sheet) & Email/Calendar Reminder Dispatch -->
+          <div class="row g-3">
+            <div class="col-12 col-lg-7">
+              <div class="surface-card h-100">
+                <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+                  <div>
+                    <h6 class="fw-bold mb-0"><i class="bi bi-sliders me-2 text-primary"></i>กฎจัดหมวดหมู่และติดแท็กอัตโนมัติ (Smart Rules — ชีต Rules)</h6>
+                    <div class="small text-muted">เปิดหรือปิดกฎได้ตามต้องการ ใช้ทั้งตอนจดรายการและตอนนำเข้าไฟล์ CSV</div>
+                  </div>
+                  <div class="d-flex align-items-center gap-2">
+                    <span id="smartRuleCountBadge" class="badge bg-primary">0 กฎ</span>
+                    <button class="btn btn-sm btn-outline-primary" onclick="PFM_AUTOMATION.openRuleModal()">
+                      <i class="bi bi-plus-lg"></i> เพิ่มกฎ
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Live Rule Evaluator Tester -->
+                <div class="p-2 bg-light border rounded mb-3">
+                  <div class="input-group input-group-sm">
+                    <span class="input-group-text bg-white"><i class="bi bi-magic text-primary me-1"></i>ทดสอบกฎ</span>
+                    <input type="text" id="ruleTestInput" class="form-control" placeholder="พิมพ์ชื่อรายการ เช่น Starbucks, GrabFood, 7-Eleven, การไฟฟ้านครหลวง">
+                    <button class="btn btn-primary" type="button" onclick="PFM_AUTOMATION.testRuleEvaluator()">ทดสอบจับคู่หมวดหมู่</button>
+                  </div>
+                  <div id="ruleTestResult" class="small mt-1 ps-1"></div>
+                </div>
+
+                <div class="table-responsive">
+                  <table class="table table-custom table-sm align-middle">
+                    <thead>
+                      <tr>
+                        <th class="ps-3">ชื่อกฎอัตโนมัติ</th>
+                        <th>เงื่อนไขคำค้นหา</th>
+                        <th>หมวดหมู่เป้าหมาย</th>
+                        <th>แท็กอัตโนมัติ</th>
+                        <th class="text-center">เปิด/ปิด</th>
+                        <th class="text-end pe-3">ลบ</th>
+                      </tr>
+                    </thead>
+                    <tbody id="smartRulesTableBody"></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-12 col-lg-5">
+              <div class="surface-card h-100">
+                <h6 class="fw-bold mb-2"><i class="bi bi-envelope-paper-fill me-2 text-success"></i>ส่งการแจ้งเตือนผ่าน Email & Google Calendar</h6>
+                <p class="small text-muted mb-3">ส่งสรุปบิลใกล้ครบกำหนด งบประมาณใกล้เต็ม และนัดหมายเตือนชำระเงินเข้า Gmail และ Google Calendar (เมื่อรันบน Google Apps Script ที่ได้รับอนุญาต)</p>
+
+                <form id="reminderDispatchForm" onsubmit="PFM_AUTOMATION.sendReminderDispatch(event)">
+                  <div class="mb-2">
+                    <label class="form-label small fw-semibold">ช่องทางการแจ้งเตือน *</label>
+                    <select id="reminderChannel" class="form-select form-select-sm" required>
+                      <option value="both" selected>ส่งทั้ง Email (Gmail) + ปักหมุด Google Calendar</option>
+                      <option value="email">ส่งเฉพาะ Email (MailApp)</option>
+                      <option value="calendar">ปักหมุดเฉพาะ Google Calendar (CalendarApp)</option>
+                    </select>
+                  </div>
+                  <div class="row g-2 mb-2">
+                    <div class="col-7">
+                      <label class="form-label small fw-semibold">อีเมลผู้รับ *</label>
+                      <input type="email" id="reminderEmail" class="form-control form-control-sm" value="chaloemphonbannarak@gmail.com" required>
+                    </div>
+                    <div class="col-5">
+                      <label class="form-label small fw-semibold">วันที่ปักหมุดปฏิทิน *</label>
+                      <input type="date" id="reminderDate" class="form-control form-control-sm" required>
+                    </div>
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label small fw-semibold">หัวข้อการแจ้งเตือน *</label>
+                    <input type="text" id="reminderSubject" class="form-control form-control-sm" value="[PFM PRO] สรุปการแจ้งเตือนทางการเงิน บิลครบกำหนด และงบประมาณ" required>
+                  </div>
+                  <button type="submit" id="btnSendReminder" class="btn btn-success btn-sm w-100">
+                    <i class="bi bi-send-check me-1"></i>ส่งแจ้งเตือนและบันทึกประวัติลง Google Sheets
+                  </button>
+                </form>
+
+                <div id="reminderDispatchStatus"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ===============================================================
+             VIEW 14: PHASE ROADMAP & HONEST STATUS DISCLOSURE (Criteria #12)
+             =============================================================== -->
+        <section id="view-roadmap" class="d-none">
+          <div class="surface-card">
+            <h4 class="fw-bold mb-3">สถานะการพัฒนาตามแผน 4 Phases (Development Strategy & Status)</h4>
+            <p class="text-muted">ตามข้อกำหนด Acceptance Criteria ข้อ 11 และ 12 ระบบแสดงสถานะโมดูลที่เชื่อมต่อและผ่านการทดสอบกับฐานข้อมูล Google Sheets จริงแล้วครบทั้ง 4 Phases (โดยงดเว้นการเชื่อมต่อ Bank API ภายนอกตามคำสั่งผู้ใช้เพื่อความปลอดภัย):</p>
+
+            <div class="row g-3 mt-2">
+              <div class="col-12 col-md-6 col-xl-3">
+                <div class="p-3 border rounded bg-success bg-opacity-10 border-success h-100">
+                  <span class="badge bg-success mb-2">เสร็จสมบูรณ์ & ทดสอบจริงแล้ว</span>
+                  <h5 class="fw-bold">Phase 1: Core Financial Foundation</h5>
+                  <ul class="small mb-0">
+                    <li>สร้าง Google Sheets จริงครบทั้ง 16 ชีต (`15B_GJFBZjTEOhTeK89ZP0yWEosRbzMZ9Qx3hexa-I7A`)</li>
+                    <li>ระบบยืนยันตัวตน (Email + Password HMAC-SHA256 + PIN 6 หลัก + Lockout + Multi-user Isolation)</li>
+                    <li>Accounts CRUD & Reconcile</li>
+                    <li>Transactions CRUD, โอนเงินไม่คิดซ้ำ, Revision History, Void, นำเข้า/ส่งออก CSV</li>
+                    <li>Dashboard คำนวณจริง, Backup/Restore และ Audit Logs</li>
+                  </ul>
+                </div>
+              </div>
+
+              <div class="col-12 col-md-6 col-xl-3">
+                <div class="p-3 border rounded bg-success bg-opacity-10 border-success h-100">
+                  <span class="badge bg-success mb-2">เสร็จสมบูรณ์ & ทดสอบจริงแล้ว</span>
+                  <h5 class="fw-bold">Phase 2: Budgets, Goals, Recurring & Reports</h5>
+                  <ul class="small mb-0">
+                    <li><strong>Budgets (Module D):</strong> งบรายวัน/สัปดาห์/เดือน/ปี, งบรวมและแยกหมวดหมู่, Rollover, แจ้งเตือนเมื่อใกล้เต็ม</li>
+                    <li><strong>Savings Goals (Module E):</strong> เป้าหมายการออม, คำนวณยอดออมต่อเดือน, บันทึกเติม/ถอนในชีต `Goal_Contributions`</li>
+                    <li><strong>Recurring (Module F):</strong> รายรับ/รายจ่ายประจำ, แยกตาราง Forecast 90 วันออกจากรายการจริง, ป้องกันรายการซ้ำด้วย Idempotency Key</li>
+                    <li><strong>Reports (Module H):</strong> เปรียบเทียบรายเดือน/ไตรมาส/ปี, แยก Actuals vs Forecast, Export CSV & Print/PDF</li>
+                  </ul>
+                </div>
+              </div>
+
+              <div class="col-12 col-md-6 col-xl-3">
+                <div class="p-3 border rounded bg-success bg-opacity-10 border-success h-100">
+                  <span class="badge bg-success mb-2">เสร็จสมบูรณ์ & ทดสอบจริงแล้ว</span>
+                  <h5 class="fw-bold">Phase 3: Debts, Bills, Import/Export & Notifications</h5>
+                  <ul class="small mb-0">
+                    <li><strong>Debts & Credit Cards (Module G):</strong> บริหารหนี้สิน, บันทึกผ่อนชำระแยกเงินต้น/ดอกเบี้ย (`Debt_Payments`), ตารางผ่อนชำระ (Amortization), คำนวณ DTI และชำระบัตรเครดิตแบบ Transfer ไม่นับรายจ่ายซ้ำ</li>
+                    <li><strong>Bills (Module G):</strong> บิลแจ้งเตือนวันครบกำหนด, ชำระบิลพร้อมสร้างบิลรอบถัดไปอัตโนมัติ</li>
+                    <li><strong>Import/Export (Module I):</strong> นำเข้า CSV พร้อม Preview, Dedup และประวัติในชีต `Import_History`</li>
+                    <li><strong>Notifications:</strong> ระบบสแกนแจ้งเตือนอัตโนมัติบันทึกลงชีต `Notifications`</li>
+                  </ul>
+                </div>
+              </div>
+
+              <div class="col-12 col-md-6 col-xl-3">
+                <div class="p-3 border rounded bg-success bg-opacity-10 border-success h-100">
+                  <span class="badge bg-success mb-2">เสร็จสมบูรณ์ & ทดสอบจริงแล้ว</span>
+                  <h5 class="fw-bold">Phase 4: Smart Automation & Analytics</h5>
+                  <ul class="small mb-0">
+                    <li><strong>Smart Rules (Module J):</strong> ระบบกฎจัดหมวดหมู่และติดแท็กอัตโนมัติ (`Rules` sheet) ที่ผู้ใช้เปิด/ปิดได้</li>
+                    <li><strong>Anomaly & Forecast (Module J):</strong> ตรวจจับค่าใช้จ่ายผิดปกติเทียบค่าเฉลี่ยย้อนหลัง และคาดการณ์กระแสเงินสด 30/60/90 วัน</li>
+                    <li><strong>Email & Calendar (Module J):</strong> แจ้งเตือนผ่าน Gmail (`MailApp`) และ Google Calendar (`CalendarApp`)</li>
+                    <li><strong>หมายเหตุ Bank API:</strong> งดเว้นการเชื่อมต่อ Bank API ภายนอกตามคำสั่งผู้ใช้เพื่อความปลอดภัยสูงสุด (ใช้ระบบนำเข้า Statement CSV + Dedup แทน)</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </main>
+    </div>
+
+    <!-- Mobile Bottom Navigation -->
+    <nav class="mobile-bottom-nav">
+      <button id="mobnav-dashboard" class="mobile-nav-btn active" onclick="PFM_APP.navigateTo('dashboard')">
+        <i class="bi bi-grid-1x2-fill fs-5"></i><span>ภาพรวม</span>
+      </button>
+      <button id="mobnav-transactions" class="mobile-nav-btn" onclick="PFM_APP.navigateTo('transactions')">
+        <i class="bi bi-arrow-left-right fs-5"></i><span>ธุรกรรม</span>
+      </button>
+      <button id="mobnav-budgets" class="mobile-nav-btn" onclick="PFM_APP.navigateTo('budgets')">
+        <i class="bi bi-pie-chart-fill fs-5"></i><span>งบประมาณ</span>
+      </button>
+      <button id="mobnav-goals" class="mobile-nav-btn" onclick="PFM_APP.navigateTo('goals')">
+        <i class="bi bi-bullseye fs-5"></i><span>ออมเงิน</span>
+      </button>
+      <button id="mobnav-reports" class="mobile-nav-btn" onclick="PFM_APP.navigateTo('reports')">
+        <i class="bi bi-bar-chart-line-fill fs-5"></i><span>รายงาน</span>
+      </button>
+    </nav>
+  </div>
+
+  <!-- =====================================================================
+       MODALS
+       ===================================================================== -->
+
+  <!-- 1. Account Create/Edit Modal -->
+  <div class="modal fade" id="accountModal" tabindex="-1">
+    <div class="modal-dialog">
+      <form id="accountModalForm" class="modal-content">
+        <div class="modal-header">
+          <h5 id="accountModalTitle" class="modal-title fw-bold">เพิ่มบัญชีการเงิน</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="accId">
+          <div class="mb-2">
+            <label class="form-label small fw-semibold">ชื่อบัญชี *</label>
+            <input type="text" id="accName" class="form-control" placeholder="เช่น กสิกรไทย ออมทรัพย์, เงินสดกระเป๋าหลัก" required>
+          </div>
+          <div class="row g-2 mb-2">
+            <div class="col-7">
+              <label class="form-label small fw-semibold">ประเภทบัญชี *</label>
+              <select id="accType" class="form-select" required>
+                <option value="cash">เงินสด (Cash)</option>
+                <option value="bank" selected>บัญชีธนาคาร (Bank)</option>
+                <option value="ewallet">E-Wallet (TrueMoney / LINE Pay)</option>
+                <option value="credit_card">บัตรเครดิต (Credit Card)</option>
+                <option value="investment">บัญชีลงทุน (Investment)</option>
+              </select>
+            </div>
+            <div class="col-5">
+              <label class="form-label small fw-semibold">สกุลเงิน *</label>
+              <select id="accCurrency" class="form-select">
+                <option value="THB" selected>THB</option>
+                <option value="USD">USD</option>
+                <option value="EUR">EUR</option>
+                <option value="JPY">JPY</option>
+                <option value="GBP">GBP</option>
+              </select>
+            </div>
+          </div>
+          <div class="mb-2">
+            <label class="form-label small fw-semibold">ยอดเงินตั้งต้น (Opening Balance)</label>
+            <input type="number" step="0.01" id="accOpeningBalance" class="form-control" value="0" required>
+          </div>
+          <div class="row g-2 mb-2">
+            <div class="col-7">
+              <label class="form-label small">สถาบันการเงิน / ธนาคาร</label>
+              <input type="text" id="accInstitution" class="form-control" placeholder="เช่น KBANK, SCB, Krungthai">
+            </div>
+            <div class="col-5">
+              <label class="form-label small">เลขท้ายบัญชี (Masked)</label>
+              <input type="text" id="accMaskedNumber" class="form-control" placeholder="xxxx-1234">
+            </div>
+          </div>
+
+          <!-- Credit Card Specific Fields -->
+          <div id="accCreditCardFields" class="row g-2 mb-2 d-none p-2 border rounded">
+            <div class="col-12 col-sm-4">
+              <label class="form-label small">วงเงินบัตร</label>
+              <input type="number" step="0.01" id="accCreditLimit" class="form-control" placeholder="50000">
+            </div>
+            <div class="col-6 col-sm-4">
+              <label class="form-label small">วันตัดรอบ (1-31)</label>
+              <input type="number" min="1" max="31" id="accBillingDay" class="form-control" placeholder="25">
+            </div>
+            <div class="col-6 col-sm-4">
+              <label class="form-label small">วันครบกำหนด (1-31)</label>
+              <input type="number" min="1" max="31" id="accDueDay" class="form-control" placeholder="10">
+            </div>
+          </div>
+
+          <div class="row g-2 align-items-center mt-2">
+            <div class="col-4">
+              <label class="form-label small mb-0">สีประจำบัญชี</label>
+              <input type="color" id="accColor" class="form-control form-control-color w-100" value="#2563EB">
+            </div>
+            <div class="col-8 pt-3">
+              <div class="form-check">
+                <input type="checkbox" id="accIncludeNetWorth" class="form-check-input" checked>
+                <label class="form-check-label small" for="accIncludeNetWorth">คำนวณรวมในมูลค่าสุทธิ (Net Worth)</label>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+          <button type="submit" id="btnSaveAccount" class="btn btn-primary">บันทึกข้อมูลบัญชี</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 2. Account Reconcile Modal -->
+  <div class="modal fade" id="reconcileModal" tabindex="-1">
+    <div class="modal-dialog">
+      <form id="reconcileModalForm" class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold">กระทบยอดเงินในบัญชี (Reconcile Account)</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="recAccountId">
+          <div class="mb-2">บัญชี: <strong id="recAccountName"></strong></div>
+          <div class="mb-3">ยอดคงเหลือในระบบปัจจุบัน: <strong id="recSystemBalance" class="text-primary"></strong></div>
+          <div class="mb-3">
+            <label class="form-label small fw-semibold">ยอดเงินที่มีอยู่จริง (Actual Balance) *</label>
+            <input type="number" step="0.01" id="recActualBalance" class="form-control form-control-lg fw-bold" required>
+            <div class="form-text small">หากยอดจริงต่างจากยอดในระบบ ระบบจะสร้างรายการปรับยอด (Adjustment) ให้อัตโนมัติ</div>
+          </div>
+          <div class="mb-2">
+            <label class="form-label small">หมายเหตุการกระทบยอด</label>
+            <input type="text" id="recNote" class="form-control">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+          <button type="submit" id="btnSubmitReconcile" class="btn btn-primary">ยืนยันการกระทบยอด</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 3. Account Balance History Modal -->
+  <div class="modal fade" id="accountHistoryModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 id="historyModalTitle" class="modal-title fw-bold">ประวัติยอดเงิน</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="table-responsive">
+            <table class="table table-custom">
+              <thead>
+                <tr>
+                  <th>วัน-เวลา</th>
+                  <th>รายการ</th>
+                  <th class="text-end">ยอดเปลี่ยนแปลง</th>
+                  <th class="text-end">ยอดคงเหลือสะสม</th>
+                </tr>
+              </thead>
+              <tbody id="accountHistoryTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. Transaction Create/Edit Modal -->
+  <div class="modal fade" id="txModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <form id="txModalForm" class="modal-content">
+        <div class="modal-header">
+          <h5 id="txModalTitle" class="modal-title fw-bold">บันทึกรายการธุรกรรม</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="txId">
+          <div class="row g-2 mb-2">
+            <div class="col-12 col-sm-4">
+              <label class="form-label small fw-semibold">ประเภทธุรกรรม *</label>
+              <select id="txType" class="form-select" required>
+                <option value="expense">รายจ่าย (Expense)</option>
+                <option value="income">รายรับ (Income)</option>
+                <option value="transfer">โอนเงินระหว่างบัญชี (Transfer)</option>
+                <option value="refund">เงินคืน (Refund)</option>
+                <option value="adjustment">ปรับปรุงยอด (Adjustment)</option>
+              </select>
+            </div>
+            <div class="col-6 col-sm-4">
+              <label class="form-label small fw-semibold">วันที่ *</label>
+              <input type="date" id="txDate" class="form-control" required>
+            </div>
+            <div class="col-6 col-sm-4">
+              <label class="form-label small fw-semibold">เวลา</label>
+              <input type="time" id="txTime" class="form-control">
+            </div>
+          </div>
+
+          <div class="row g-2 mb-2">
+            <div class="col-12 col-sm-6">
+              <label class="form-label small fw-semibold">บัญชีต้นทาง / บัญชีที่ทำรายการ *</label>
+              <select id="txAccount" class="form-select" required></select>
+            </div>
+            <div id="txToAccountGroup" class="col-12 col-sm-6 d-none">
+              <label class="form-label small fw-semibold">โอนเข้าบัญชีปลายทาง *</label>
+              <select id="txToAccount" class="form-select"></select>
+            </div>
+            <div class="col-12 col-sm-6">
+              <label class="form-label small fw-semibold">จำนวนเงิน *</label>
+              <input type="number" step="0.01" id="txAmount" class="form-control fw-bold" placeholder="0.00" required>
+            </div>
+          </div>
+
+          <div class="row g-2 mb-2">
+            <div class="col-12 col-sm-6">
+              <label class="form-label small fw-semibold">หมวดหมู่หลัก *</label>
+              <select id="txCategory" class="form-select"></select>
+            </div>
+            <div class="col-12 col-sm-6">
+              <label class="form-label small">หมวดหมู่ย่อย (Subcategory)</label>
+              <select id="txSubcategory" class="form-select"></select>
+            </div>
+          </div>
+
+          <div class="row g-2 mb-2">
+            <div class="col-12 col-sm-6">
+              <div class="d-flex justify-content-between align-items-center">
+                <label class="form-label small fw-semibold mb-1">ร้านค้า / ผู้รับเงิน / แหล่งรายรับ</label>
+                <button type="button" class="btn btn-link btn-sm p-0 text-decoration-none small" onclick="PFM_AUTOMATION.suggestCategoryForTransactionModal()">
+                  <i class="bi bi-magic me-1"></i>แนะนำหมวดหมู่อัตโนมัติ
+                </button>
+              </div>
+              <input type="text" id="txMerchant" class="form-control" placeholder="เช่น 7-Eleven, Starbucks, การไฟฟ้านครหลวง">
+            </div>
+            <div class="col-12 col-sm-6">
+              <label class="form-label small">แท็ก (คั่นด้วยจุลภาค ,)</label>
+              <input type="text" id="txTags" class="form-control" placeholder="เช่น อาหารเที่ยง, ประจำเดือน">
+            </div>
+          </div>
+
+          <div class="mb-2">
+            <label class="form-label small">รายละเอียด / หมายเหตุเพิ่มเติม</label>
+            <input type="text" id="txDescription" class="form-control" placeholder="รายละเอียดเพิ่มเติม...">
+          </div>
+
+          <div class="mb-2">
+            <label class="form-label small">ลิงก์ใบเสร็จ / เอกสารแนบ (Google Drive / URL)</label>
+            <input type="url" id="txReceiptUrl" class="form-control" placeholder="https://drive.google.com/...">
+          </div>
+
+          <div id="txEditReasonGroup" class="mb-2 d-none">
+            <label class="form-label small fw-semibold text-warning">เหตุผลในการแก้ไขรายการ (บันทึกใน Revision History)</label>
+            <input type="text" id="txEditReason" class="form-control" placeholder="เช่น แก้ไขตัวเลขตามใบเสร็จจริง">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+          <button type="submit" id="btnSaveTx" class="btn btn-primary">บันทึกรายการ</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 5. Transaction Revision History Modal -->
+  <div class="modal fade" id="txRevisionModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold">ประวัติการแก้ไขและยกเลิกรายการ (Revision Log)</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div id="txRevisionHistoryBody" class="modal-body"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6. CSV Import Preview & Deduplication Modal -->
+  <div class="modal fade" id="csvImportModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold">นำเข้าธุรกรรมจากไฟล์ CSV (Preview & Duplicate Detection)</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="row g-2 align-items-end mb-3">
+            <div class="col-12 col-md-4">
+              <label class="form-label small fw-semibold">เลือกบัญชีที่ต้องการนำเข้า *</label>
+              <select id="csvImportAccount" class="form-select"></select>
+            </div>
+            <div class="col-12 col-md-5">
+              <label class="form-label small fw-semibold">เลือกไฟล์ CSV (คอลัมน์: tx_date, tx_type, amount, merchant, description)</label>
+              <input type="file" id="csvFileInput" accept=".csv" class="form-control">
+            </div>
+            <div class="col-12 col-md-3">
+              <div class="form-check">
+                <input type="checkbox" id="csvSkipDuplicates" class="form-check-input" checked>
+                <label class="form-check-label small" for="csvSkipDuplicates">ข้ามรายการที่ซ้ำอัตโนมัติ</label>
+              </div>
+            </div>
+          </div>
+
+          <div id="csvPreviewSection" class="d-none">
+            <div id="csvPreviewSummary" class="alert alert-info py-2 small"></div>
+            <div class="table-responsive" style="max-height: 340px;">
+              <table class="table table-sm table-custom">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>วันที่</th>
+                    <th>ประเภท</th>
+                    <th>รายการ</th>
+                    <th>หมวดหมู่ที่จับคู่</th>
+                    <th class="text-end">จำนวนเงิน</th>
+                    <th>สถานะตรวจสอบ</th>
+                  </tr>
+                </thead>
+                <tbody id="csvPreviewTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">ปิด</button>
+          <button type="button" id="btnCommitCsvImport" class="btn btn-success" onclick="PFM_TRANSACTIONS.commitCsvImport()" disabled>
+            <i class="bi bi-check2-all me-1"></i>ยืนยันการนำเข้าข้อมูลลง Google Sheets
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 7. Budget Create/Edit Modal (Phase 2 — Module D) -->
+  <div class="modal fade" id="budgetModal" tabindex="-1">
+    <div class="modal-dialog">
+      <form id="budgetModalForm" class="modal-content">
+        <div class="modal-header">
+          <h5 id="budgetModalTitle" class="modal-title fw-bold">สร้างงบประมาณใหม่ (Create Budget)</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="bdgId">
+          <div class="mb-2">
+            <label class="form-label small fw-semibold">ชื่องบประมาณ *</label>
+            <input type="text" id="bdgName" class="form-control" placeholder="เช่น งบค่าอาหารรายเดือน, งบรวมประจำเดือน" required>
+          </div>
+          <div class="row g-2 mb-2">
+            <div class="col-6">
+              <label class="form-label small fw-semibold">รอบระยะเวลา *</label>
+              <select id="bdgPeriodType" class="form-select" required>
+                <option value="daily">รายวัน (Daily)</option>
+                <option value="weekly">รายสัปดาห์ (Weekly)</option>
+                <option value="monthly" selected>รายเดือน (Monthly)</option>
+                <option value="yearly">รายปี (Yearly)</option>
+              </select>
+            </div>
+            <div class="col-6">
+              <label class="form-label small fw-semibold">หมวดหมู่ที่คุมงบ *</label>
+              <select id="bdgCategory" class="form-select" required>
+                <option value="ALL">🌟 งบรวมทุกหมวดหมู่ (Overall Budget)</option>
+              </select>
+            </div>
+          </div>
+          <div class="row g-2 mb-2">
+            <div class="col-6">
+              <label class="form-label small fw-semibold">วงเงินงบประมาณ (Amount Limit) *</label>
+              <input type="number" step="0.01" min="0.01" id="bdgAmountLimit" class="form-control fw-bold" placeholder="10000" required>
+            </div>
+            <div class="col-6">
+              <label class="form-label small fw-semibold">แจ้งเตือนเมื่อใช้ถึง (%)</label>
+              <input type="number" min="1" max="100" id="bdgAlertThreshold" class="form-control" value="80">
+            </div>
+          </div>
+          <div class="row g-2 mb-2 align-items-end">
+            <div class="col-6">
+              <div class="form-check">
+                <input type="checkbox" id="bdgRolloverEnabled" class="form-check-input">
+                <label class="form-check-label small" for="bdgRolloverEnabled">เปิดใช้งานการยกยอด (Rollover)</label>
+              </div>
+            </div>
+            <div class="col-6">
+              <label class="form-label small">ยอดงบยกมาจากงวดก่อน</label>
+              <input type="number" step="0.01" id="bdgRolloverAmount" class="form-control" value="0">
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+          <button type="submit" id="btnSaveBudget" class="btn btn-primary">บันทึกงบประมาณ</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 8. Savings Goal Create/Edit Modal (Phase 2 — Module E) -->
+  <div class="modal fade" id="goalModal" tabindex="-1">
+    <div class="modal-dialog">
+      <form id="goalModalForm" class="modal-content">
+        <div class="modal-header">
+          <h5 id="goalModalTitle" class="modal-title fw-bold">ตั้งเป้าหมายการออมใหม่ (Create Savings Goal)</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="golId">
+          <div class="mb-2">
+            <label class="form-label small fw-semibold">ชื่อเป้าหมายการออม *</label>
+            <input type="text" id="golName" class="form-control" placeholder="เช่น เงินสำรองฉุกเฉิน 6 เดือน, ทริปญี่ปุ่น" required>
+          </div>
+          <div class="row g-2 mb-2">
+            <div class="col-6">
+              <label class="form-label small fw-semibold">ยอดเป้าหมาย (Target Amount) *</label>
+              <input type="number" step="0.01" min="0.01" id="golTargetAmount" class="form-control fw-bold" placeholder="100000" required>
+            </div>
+            <div id="golInitialAmountGroup" class="col-6">
+              <label class="form-label small fw-semibold">ยอดออมเริ่มต้นที่มีแล้ว</label>
+              <input type="number" step="0.01" min="0" id="golInitialAmount" class="form-control" value="0">
+            </div>
+          </div>
+          <div class="row g-2 mb-2">
+            <div class="col-5">
+              <label class="form-label small fw-semibold">วันครบกำหนดเป้าหมาย *</label>
+              <input type="date" id="golTargetDate" class="form-control" required>
+            </div>
+            <div class="col-4">
+              <label class="form-label small fw-semibold">ระดับความสำคัญ</label>
+              <select id="golPriority" class="form-select">
+                <option value="high">สูง (High)</option>
+                <option value="medium" selected>ปานกลาง (Medium)</option>
+                <option value="low">ทั่วไป (Low)</option>
+              </select>
+            </div>
+            <div class="col-3">
+              <label class="form-label small">สีสัญลักษณ์</label>
+              <input type="color" id="golColor" class="form-control form-control-color w-100" value="#10B981">
+            </div>
+          </div>
+          <div class="mb-2">
+            <label class="form-label small">หมายเหตุ / แผนการออม</label>
+            <input type="text" id="golNotes" class="form-control" placeholder="เช่น หักออมทุกวันเงินเดือนออก">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+          <button type="submit" id="btnSaveGoal" class="btn btn-primary">บันทึกเป้าหมาย</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 9. Goal Contribution (Deposit / Withdraw) Modal -->
+  <div class="modal fade" id="goalContributeModal" tabindex="-1">
+    <div class="modal-dialog">
+      <form id="goalContributeModalForm" class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold">บันทึกเติมเงิน / ถอนเงินออม</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="contribGoalId">
+          <div class="mb-2">เป้าหมาย: <strong id="contribGoalTitle" class="text-primary"></strong></div>
+          <div class="row g-2 mb-2">
+            <div class="col-6">
+              <label class="form-label small fw-semibold">ประเภทรายการ *</label>
+              <select id="contribEntryType" class="form-select" required>
+                <option value="deposit">เติมเงินออมเข้าเป้าหมาย (+)</option>
+                <option value="withdraw">ถอนเงินออมออกจากเป้าหมาย (-)</option>
+              </select>
+            </div>
+            <div class="col-6">
+              <label class="form-label small fw-semibold">วันที่ทำรายการ *</label>
+              <input type="date" id="contribDate" class="form-control" required>
+            </div>
+          </div>
+          <div class="mb-2">
+            <label class="form-label small fw-semibold">จำนวนเงิน *</label>
+            <input type="number" step="0.01" min="0.01" id="contribAmount" class="form-control form-control-lg fw-bold" placeholder="0.00" required>
+          </div>
+          <div class="mb-2">
+            <label class="form-label small">หมายเหตุ</label>
+            <input type="text" id="contribNote" class="form-control" placeholder="เช่น ออมประจำเดือนตุลาคม">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+          <button type="submit" id="btnSubmitContribute" class="btn btn-success">ยืนยันการบันทึก</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 10. Goal Contribution History Modal -->
+  <div class="modal fade" id="goalHistoryModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 id="goalHistoryModalTitle" class="modal-title fw-bold">ประวัติการออม</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="table-responsive">
+            <table class="table table-custom">
+              <thead>
+                <tr>
+                  <th>วันที่</th>
+                  <th>ประเภท</th>
+                  <th>หมายเหตุ</th>
+                  <th class="text-end">จำนวนเงิน</th>
+                </tr>
+              </thead>
+              <tbody id="goalHistoryTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 11. Recurring Transaction Rule Modal (Phase 2 — Module F) -->
+  <div class="modal fade" id="recurringModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <form id="recurringModalForm" class="modal-content">
+        <div class="modal-header">
+          <h5 id="recurringModalTitle" class="modal-title fw-bold">สร้างรายการประจำ (Recurring Template)</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="recId">
+          <div class="row g-2 mb-2">
+            <div class="col-12 col-sm-8">
+              <label class="form-label small fw-semibold">ชื่อรายการประจำ *</label>
+              <input type="text" id="recTitle" class="form-control" placeholder="เช่น ค่าเช่าคอนโดรายเดือน, Netflix, เงินเดือนประจำ" required>
+            </div>
+            <div class="col-12 col-sm-4">
+              <label class="form-label small fw-semibold">ประเภท *</label>
+              <select id="recTxType" class="form-select" required>
+                <option value="expense" selected>รายจ่ายประจำ (Expense)</option>
+                <option value="income">รายรับประจำ (Income)</option>
+                <option value="transfer">โอนเงินประจำ (Transfer)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="row g-2 mb-2">
+            <div class="col-6 col-sm-4">
+              <label class="form-label small fw-semibold">ความถี่ (Frequency) *</label>
+              <select id="recFrequency" class="form-select" required>
+                <option value="daily">รายวัน (Daily)</option>
+                <option value="weekly">รายสัปดาห์ (Weekly)</option>
+                <option value="monthly" selected>รายเดือน (Monthly)</option>
+                <option value="yearly">รายปี (Yearly)</option>
+              </select>
+            </div>
+            <div class="col-6 col-sm-4">
+              <label class="form-label small fw-semibold">ทุกๆ (Interval)</label>
+              <input type="number" min="1" max="365" id="recIntervalCount" class="form-control" value="1" required>
+            </div>
+            <div class="col-12 col-sm-4">
+              <label class="form-label small fw-semibold">จำนวนเงิน *</label>
+              <input type="number" step="0.01" min="0.01" id="recAmount" class="form-control fw-bold" placeholder="0.00" required>
+            </div>
+          </div>
+
+          <div class="row g-2 mb-2">
+            <div class="col-12 col-sm-6">
+              <label class="form-label small fw-semibold">บัญชีต้นทาง *</label>
+              <select id="recAccount" class="form-select" required></select>
+            </div>
+            <div id="recToAccountGroup" class="col-12 col-sm-6 d-none">
+              <label class="form-label small fw-semibold">บัญชีปลายทาง (สำหรับโอนเงิน) *</label>
+              <select id="recToAccount" class="form-select"></select>
+            </div>
+            <div class="col-12 col-sm-6">
+              <label class="form-label small fw-semibold">หมวดหมู่</label>
+              <select id="recCategory" class="form-select"></select>
+            </div>
+          </div>
+
+          <div class="row g-2 mb-2">
+            <div class="col-12 col-sm-4">
+              <label class="form-label small fw-semibold">วันเริ่มต้น *</label>
+              <input type="date" id="recStartDate" class="form-control" required>
+            </div>
+            <div class="col-12 col-sm-4">
+              <label class="form-label small fw-semibold">วันครบกำหนดถัดไป (Next Run) *</label>
+              <input type="date" id="recNextRunDate" class="form-control" required>
+            </div>
+            <div class="col-12 col-sm-4">
+              <label class="form-label small">วันสิ้นสุดสัญญา (ถ้ามี)</label>
+              <input type="date" id="recEndDate" class="form-control">
+            </div>
+          </div>
+
+          <div class="form-check mt-2">
+            <input type="checkbox" id="recAutoPost" class="form-check-input" checked>
+            <label class="form-check-label small" for="recAutoPost">สร้างรายการธุรกรรมจริงอัตโนมัติเมื่อถึงกำหนด (พร้อม Idempotency Key ป้องกันรายการซ้ำ)</label>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+          <button type="submit" id="btnSaveRecurring" class="btn btn-primary">บันทึกรายการประจำ</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 12. Debt / Loan Create & Edit Modal (Phase 3 — Module G) -->
+  <div class="modal fade" id="debtModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <form id="debtModalForm" class="modal-content">
+        <div class="modal-header">
+          <h5 id="debtModalTitle" class="modal-title fw-bold">เพิ่มรายการหนี้สิน / สินเชื่อใหม่</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="dbtId">
+          <div class="row g-2 mb-2">
+            <div class="col-12 col-sm-7">
+              <label class="form-label small fw-semibold">ชื่อรายการหนี้สิน / สินเชื่อ *</label>
+              <input type="text" id="dbtName" class="form-control" placeholder="เช่น สินเชื่อรถยนต์ Honda Civic, สินเชื่อบ้าน ธอส." required>
+            </div>
+            <div class="col-12 col-sm-5">
+              <label class="form-label small fw-semibold">ประเภทหนี้สิน *</label>
+              <select id="dbtType" class="form-select" required>
+                <option value="mortgage">สินเชื่อบ้าน/คอนโด (Mortgage)</option>
+                <option value="auto_loan">สินเชื่อรถยนต์ (Auto Loan)</option>
+                <option value="personal_loan" selected>สินเชื่อส่วนบุคคล (Personal Loan)</option>
+                <option value="credit_card_debt">หนี้บัตรเครดิต/กดเงินสด (Credit Card Debt)</option>
+                <option value="student_loan">กยศ. / การศึกษา (Student Loan)</option>
+                <option value="business_loan">สินเชื่อธุรกิจ (Business Loan)</option>
+                <option value="other">อื่นๆ (Other)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="row g-2 mb-2">
+            <div class="col-12 col-sm-6">
+              <label class="form-label small fw-semibold">สถาบันการเงิน / ผู้ให้กู้</label>
+              <input type="text" id="dbtLender" class="form-control" placeholder="เช่น ธนาคารกสิกรไทย, กรุงศรี ออโต้">
+            </div>
+            <div class="col-6 col-sm-3">
+              <label class="form-label small fw-semibold">เงินต้นตั้งต้น *</label>
+              <input type="number" step="0.01" min="0.01" id="dbtPrincipal" class="form-control fw-bold" placeholder="500000" required>
+            </div>
+            <div class="col-6 col-sm-3">
+              <label class="form-label small fw-semibold">ยอดหนี้คงเหลือปัจจุบัน</label>
+              <input type="number" step="0.01" min="0" id="dbtCurrentBalance" class="form-control" placeholder="เว้นว่าง = เท่าเงินต้น">
+            </div>
+          </div>
+
+          <div class="row g-2 mb-2">
+            <div class="col-4">
+              <label class="form-label small fw-semibold">ดอกเบี้ยต่อปี (%) *</label>
+              <input type="number" step="0.01" min="0" id="dbtInterestRate" class="form-control" value="7.5" required>
+            </div>
+            <div class="col-4">
+              <label class="form-label small fw-semibold">ค่างวดขั้นต่ำ/เดือน *</label>
+              <input type="number" step="0.01" min="0.01" id="dbtMinPayment" class="form-control fw-bold" placeholder="8500" required>
+            </div>
+            <div class="col-4">
+              <label class="form-label small fw-semibold">ชำระทุกวันที่ (1-31)</label>
+              <input type="number" min="1" max="31" id="dbtDueDay" class="form-control" value="15">
+            </div>
+          </div>
+
+          <div class="row g-2">
+            <div class="col-6">
+              <label class="form-label small">วันเริ่มสัญญา</label>
+              <input type="date" id="dbtStartDate" class="form-control">
+            </div>
+            <div class="col-6">
+              <label class="form-label small">วันเป้าหมายปลดหนี้ (ถ้ามี)</label>
+              <input type="date" id="dbtTargetDate" class="form-control">
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+          <button type="submit" class="btn btn-primary">บันทึกข้อมูลหนี้สิน</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 13. Debt Installment Payment Modal (Principal & Interest Split) -->
+  <div class="modal fade" id="debtPayModal" tabindex="-1">
+    <div class="modal-dialog">
+      <form id="debtPayModalForm" class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold">บันทึกการผ่อนชำระหนี้ (แยกเงินต้น & ดอกเบี้ย)</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="dpmDebtId">
+          <input type="hidden" id="dpmCurrentBalanceHidden">
+          <input type="hidden" id="dpmAnnualRateHidden">
+          <div class="mb-2">รายการ: <strong id="dpmDebtTitle" class="text-primary"></strong></div>
+
+          <div class="row g-2 mb-2">
+            <div class="col-6">
+              <label class="form-label small fw-semibold">วันที่ชำระ *</label>
+              <input type="date" id="dpmPaymentDate" class="form-control" required>
+            </div>
+            <div class="col-6">
+              <label class="form-label small fw-semibold">ยอดชำระรวมทั้งสิ้น *</label>
+              <input type="number" step="0.01" min="0.01" id="dpmTotalAmount" class="form-control fw-bold" required>
+            </div>
+          </div>
+
+          <div class="row g-2 mb-2">
+            <div class="col-4">
+              <label class="form-label small text-danger fw-semibold">ดอกเบี้ยจ่าย</label>
+              <input type="number" step="0.01" min="0" id="dpmInterestPaid" class="form-control">
+            </div>
+            <div class="col-4">
+              <label class="form-label small text-success fw-semibold">ตัดเงินต้นจริง</label>
+              <input type="number" step="0.01" min="0" id="dpmPrincipalPaid" class="form-control" readonly>
+            </div>
+            <div class="col-4">
+              <label class="form-label small">ค่าธรรมเนียม</label>
+              <input type="number" step="0.01" min="0" id="dpmFeeAmount" class="form-control" value="0">
+            </div>
+          </div>
+
+          <div class="mb-2">
+            <label class="form-label small fw-semibold">ตัดเงินจากบัญชี (สร้างธุรกรรมจริงอัตโนมัติ)</label>
+            <select id="dpmPaymentAccount" class="form-select"></select>
+          </div>
+
+          <div class="p-2 bg-light border rounded small d-flex justify-content-between">
+            <span>ยอดหนี้คงเหลือหลังชำระงวดนี้:</span>
+            <strong id="dpmRemainingPreview" class="text-danger">฿0.00</strong>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+          <button type="submit" class="btn btn-success">ยืนยันบันทึกผ่อนชำระ</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 14. Credit Card Statement Settlement Modal (Non-Duplicate Transfer) -->
+  <div class="modal fade" id="creditCardPayModal" tabindex="-1">
+    <div class="modal-dialog">
+      <form id="creditCardPayModalForm" class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold">ชำระบิลบัตรเครดิต (Internal Transfer — ไม่นับรายจ่ายซ้ำ)</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="alert alert-info py-2 small">
+            <i class="bi bi-shield-check me-1"></i>ระบบจะบันทึกเป็นรายการโอนเงินปิดยอดบัตร (<code>transfer</code>) เพื่อไม่ให้รายจ่ายถูกคิดซ้ำกับตอนรูดซื้อสินค้า
+          </div>
+          <div class="mb-2">
+            <label class="form-label small fw-semibold">จ่ายจากบัญชีธนาคาร / เงินสด *</label>
+            <select id="ccPayFromAccount" class="form-select" required></select>
+          </div>
+          <div class="mb-2">
+            <label class="form-label small fw-semibold">เข้าบัญชีบัตรเครดิต *</label>
+            <select id="ccPayCardAccount" class="form-select" required></select>
+          </div>
+          <div class="row g-2 mb-2">
+            <div class="col-6">
+              <label class="form-label small fw-semibold">วันที่ชำระ *</label>
+              <input type="date" id="ccPayDate" class="form-control" required>
+            </div>
+            <div class="col-6">
+              <label class="form-label small fw-semibold">จำนวนเงินที่ชำระ *</label>
+              <input type="number" step="0.01" min="0.01" id="ccPayAmount" class="form-control fw-bold" required>
+            </div>
+          </div>
+          <div class="mb-2">
+            <label class="form-label small">หมายเหตุ</label>
+            <input type="text" id="ccPayNote" class="form-control">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+          <button type="submit" class="btn btn-primary">ยืนยันชำระยอดบัตรเครดิต</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 15. Amortization Schedule Modal -->
+  <div class="modal fade" id="amortizationModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 id="amortModalTitle" class="modal-title fw-bold">ตารางผ่อนชำระ (Amortization Schedule)</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div id="amortSummaryText" class="mb-3 p-2 bg-light border rounded"></div>
+          <div class="table-responsive" style="max-height: 400px;">
+            <table class="table table-custom table-sm">
+              <thead>
+                <tr>
+                  <th>งวดที่</th>
+                  <th>กำหนดชำระ (ประมาณการ)</th>
+                  <th class="text-end">ค่างวดรวม</th>
+                  <th class="text-end">ตัดเงินต้น</th>
+                  <th class="text-end">ดอกเบี้ย</th>
+                  <th class="text-end">เงินต้นคงเหลือ</th>
+                </tr>
+              </thead>
+              <tbody id="amortScheduleTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 16. Debt Payment History Modal -->
+  <div class="modal fade" id="debtHistoryModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 id="debtHistoryModalTitle" class="modal-title fw-bold">ประวัติการผ่อนชำระหนี้</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="table-responsive">
+            <table class="table table-custom table-sm">
+              <thead>
+                <tr>
+                  <th>วันที่ชำระ</th>
+                  <th class="text-end">ยอดชำระรวม</th>
+                  <th class="text-end">ตัดเงินต้น</th>
+                  <th class="text-end">ดอกเบี้ยจ่าย</th>
+                  <th class="text-end">หนี้คงเหลือ</th>
+                  <th>รหัสธุรกรรม</th>
+                </tr>
+              </thead>
+              <tbody id="debtHistoryTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 17. Bill Reminder Create/Edit Modal (Phase 3 — Module G) -->
+  <div class="modal fade" id="billModal" tabindex="-1">
+    <div class="modal-dialog">
+      <form id="billModalForm" class="modal-content">
+        <div class="modal-header">
+          <h5 id="billModalTitle" class="modal-title fw-bold">เพิ่มบิลแจ้งเตือนวันครบกำหนดชำระ</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="bilId">
+          <div class="mb-2">
+            <label class="form-label small fw-semibold">ชื่อบิล / ค่าบริการ *</label>
+            <input type="text" id="bilName" class="form-control" placeholder="เช่น ค่าไฟฟ้าการไฟฟ้านครหลวง, ค่าน้ำประปา, ค่าส่วนกลาง" required>
+          </div>
+          <div class="row g-2 mb-2">
+            <div class="col-6">
+              <label class="form-label small fw-semibold">หมวดหมู่ *</label>
+              <select id="bilCategory" class="form-select" required></select>
+            </div>
+            <div class="col-6">
+              <label class="form-label small fw-semibold">จำนวนเงินตามบิล *</label>
+              <input type="number" step="0.01" min="0.01" id="bilAmount" class="form-control fw-bold" placeholder="1250.00" required>
+            </div>
+          </div>
+          <div class="row g-2 mb-2">
+            <div class="col-6">
+              <label class="form-label small fw-semibold">วันครบกำหนดชำระ *</label>
+              <input type="date" id="bilDueDate" class="form-control" required>
+            </div>
+            <div class="col-6">
+              <label class="form-label small fw-semibold">แจ้งเตือนล่วงหน้า (วัน)</label>
+              <input type="number" min="0" max="60" id="bilRemindDays" class="form-control" value="3">
+            </div>
+          </div>
+          <div class="form-check mb-2">
+            <input type="checkbox" id="bilIsRecurring" class="form-check-input" checked>
+            <label class="form-check-label small" for="bilIsRecurring">สร้างบิลรอบถัดไปอัตโนมัติเมื่อกดชำระบิลนี้แล้ว</label>
+          </div>
+          <div id="bilFrequencyGroup" class="mb-2">
+            <label class="form-label small fw-semibold">ความถี่ของบิล</label>
+            <select id="bilFrequency" class="form-select">
+              <option value="weekly">รายสัปดาห์ (Weekly)</option>
+              <option value="monthly" selected>รายเดือน (Monthly)</option>
+              <option value="quarterly">รายไตรมาส (Quarterly)</option>
+              <option value="yearly">รายปี (Yearly)</option>
+            </select>
+          </div>
+          <div class="mb-2">
+            <label class="form-label small">หมายเหตุ / เลขที่อ้างอิง</label>
+            <input type="text" id="bilNotes" class="form-control" placeholder="เช่น รหัสเครื่องวัด / เลขสัญญา">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+          <button type="submit" class="btn btn-primary">บันทึกบิลแจ้งเตือน</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 18. Bill Pay Confirmation Modal -->
+  <div class="modal fade" id="billPayModal" tabindex="-1">
+    <div class="modal-dialog">
+      <form id="billPayModalForm" class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold">ยืนยันการชำระบิล</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="bpayBillId">
+          <div class="mb-2">บิลที่ชำระ: <strong id="bpayBillName" class="text-primary"></strong></div>
+          <div class="mb-2">
+            <label class="form-label small fw-semibold">ตัดเงินจากบัญชี *</label>
+            <select id="bpayAccount" class="form-select" required></select>
+          </div>
+          <div class="row g-2 mb-2">
+            <div class="col-6">
+              <label class="form-label small fw-semibold">วันที่ชำระจริง *</label>
+              <input type="date" id="bpayDate" class="form-control" required>
+            </div>
+            <div class="col-6">
+              <label class="form-label small fw-semibold">จำนวนเงินที่ชำระ *</label>
+              <input type="number" step="0.01" min="0.01" id="bpayAmount" class="form-control fw-bold" required>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+          <button type="submit" class="btn btn-success">ยืนยันชำระบิล</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 19. Smart Rule Create Modal (Phase 4 — Module J) -->
+  <div class="modal fade" id="ruleModal" tabindex="-1">
+    <div class="modal-dialog">
+      <form id="ruleForm" class="modal-content" onsubmit="PFM_AUTOMATION.saveRule(event)">
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold">เพิ่มกฎจัดหมวดหมู่อัตโนมัติ (Smart Rule)</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-2">
+            <label class="form-label small fw-semibold">ชื่อกฎอัตโนมัติ *</label>
+            <input type="text" id="ruleName" class="form-control" placeholder="เช่น กาแฟ Starbucks / Cafe Amazon" required>
+          </div>
+          <div class="row g-2 mb-2">
+            <div class="col-5">
+              <label class="form-label small fw-semibold">เงื่อนไขการตรวจจับ *</label>
+              <select id="ruleMatchType" class="form-select" required>
+                <option value="contains" selected>มีคำว่า (Contains)</option>
+                <option value="starts_with">ขึ้นต้นด้วย (Starts With)</option>
+                <option value="exact">ตรงกันทุกตัวอักษร (Exact)</option>
+                <option value="regex">นิพจน์ทั่วไป (Regex)</option>
+              </select>
+            </div>
+            <div class="col-7">
+              <label class="form-label small fw-semibold">คำค้นหา (Pattern) *</label>
+              <input type="text" id="rulePatternValue" class="form-control fw-bold" placeholder="เช่น starbucks" required>
+            </div>
+          </div>
+          <div class="mb-2">
+            <label class="form-label small fw-semibold">จัดเข้าหมวดหมู่เป้าหมาย *</label>
+            <select id="ruleTargetCategory" class="form-select" required></select>
+          </div>
+          <div class="row g-2 mb-2">
+            <div class="col-8">
+              <label class="form-label small fw-semibold">แท็กอัตโนมัติ (คั่นด้วยจุลภาค ,)</label>
+              <input type="text" id="ruleAutoTags" class="form-control" placeholder="เช่น coffee, คาเฟ่">
+            </div>
+            <div class="col-4">
+              <label class="form-label small fw-semibold">ลำดับความสำคัญ</label>
+              <input type="number" min="1" max="999" id="rulePriority" class="form-control" value="10" required>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+          <button type="submit" class="btn btn-primary">บันทึกกฎอัตโนมัติ</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 20. PWA Install Guide Modal (Android / iOS / Desktop) -->
+  <div class="modal fade" id="pwaInstallModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold"><i class="bi bi-phone-fill text-primary me-2"></i>วิธีติดตั้งแอป Bank_bana ลงเครื่อง</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="d-flex align-items-center gap-3 p-3 bg-light rounded border mb-3">
+            <img src="icons/icon-192.png" alt="Bank_bana" width="56" height="56" class="rounded-3 shadow-sm">
+            <div>
+              <h6 class="fw-bold mb-0">Bank_bana</h6>
+              <div class="small text-muted">เปิดเต็มจอเหมือนแอปจริง • ใช้งานออฟไลน์ได้ • ซิงก์อัตโนมัติ</div>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <div class="fw-bold text-primary mb-1"><i class="bi bi-laptop me-1"></i>1. บนคอมพิวเตอร์ (Google Chrome / Microsoft Edge)</div>
+            <div class="small text-muted ps-3">
+              • มองไปที่ช่องพิมพ์ URL ด้านบนขวาสุด จะมีไอคอน <strong>รูปหน้าจอพร้อมลูกศรดาวน์โหลด (Install Bank_bana)</strong><br>
+              • คลิกที่ไอคอนนั้นแล้วกด <strong>"ติดตั้ง (Install)"</strong> แอปจะแยกออกมาเป็นโปรแกรมเต็มจอและสร้างทางลัดบน Desktop ทันที
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <div class="fw-bold text-success mb-1"><i class="bi bi-android2 me-1"></i>2. บนมือถือ Android (Google Chrome)</div>
+            <div class="small text-muted ps-3">
+              • แตะปุ่มเมนู <strong>จุด 3 จุด (⋮)</strong> มุมขวาบนของ Chrome<br>
+              • เลือก <strong>"ติดตั้งแอป (Install app)"</strong> หรือ <strong>"เพิ่มลงในหน้าจอหลัก (Add to Home screen)"</strong>
+            </div>
+          </div>
+
+          <div class="mb-1">
+            <div class="fw-bold text-dark mb-1"><i class="bi bi-apple me-1"></i>3. บน iPhone / iPad (Safari)</div>
+            <div class="small text-muted ps-3">
+              • เปิดเว็บนี้ในแอป <strong>Safari</strong> แล้วแตะปุ่ม <strong>แชร์ (Share รูปสี่เหลี่ยมมีลูกศรชี้ขึ้น)</strong> ด้านล่างหน้าจอ<br>
+              • เลื่อนลงมาเลือก <strong>"เพิ่มไปยังหน้าจอโฮม (Add to Home Screen)"</strong> แล้วกด <strong>"เพิ่ม (Add)"</strong>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-primary w-100" data-bs-dismiss="modal">เข้าใจแล้ว</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- External Libraries: Bootstrap Bundle & Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <!-- Application Modules (Phase 1, Phase 2, Phase 3, Phase 4 & Offline PWA) -->
+  <script src="js/config.js"></script>
+  <script src="js/offline.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/dashboard.js"></script>
+  <script src="js/accounts.js"></script>
+  <script src="js/transactions.js"></script>
+  <script src="js/budgets.js"></script>
+  <script src="js/goals.js"></script>
+  <script src="js/recurring.js"></script>
+  <script src="js/reports.js"></script>
+  <script src="js/debts.js"></script>
+  <script src="js/bills.js"></script>
+  <script src="js/automation.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
+

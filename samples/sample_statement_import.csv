@@ -1,0 +1,6 @@
+tx_date,tx_time,tx_type,amount,merchant,description,tags
+2026-10-05,08:30,expense,65.00,7-Eleven,ซื้อกาแฟและแซนด์วิชเช้า,food,breakfast
+2026-10-06,12:15,expense,180.00,GrabFood,สั่งอาหารกลางวันทานที่ออฟฟิศ,food,lunch
+2026-10-07,18:40,expense,45.00,BTS SkyTrain,เดินทางกลับบ้าน,transport,commute
+2026-10-08,14:00,income,3500.00,Fastwork Client,รับค่าจ้างงานออกแบบกราฟิกเสริม,freelance
+

@@ -1,0 +1,17 @@
+# Personal Finance Manager Pro (Bank_bana) — GitHub .gitignore
+
+# Sensitive environment variables or local credentials
+.env
+*.local.json
+
+# Temporary batch mutation files
+pfm_gsheets_batch.json
+
+# System & OS artifacts
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# Temporary logs & scratch
+*.log
+scratch/
