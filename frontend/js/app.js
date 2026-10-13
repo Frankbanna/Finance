@@ -42,8 +42,10 @@ window.PFM_APP = {
       restoreInput.addEventListener('change', (e) => this.handleRestoreBackupFile(e));
     }
 
-    document.getElementById('settingApiEndpoint').value = PFM_API.getEndpoint();
-    document.getElementById('authApiEndpointInput').value = PFM_API.getEndpoint();
+    const settingInput = document.getElementById('settingApiEndpoint');
+    if (settingInput) settingInput.value = PFM_API.getEndpoint();
+    const authInput = document.getElementById('authApiEndpointInput');
+    if (authInput) authInput.value = PFM_API.getEndpoint();
 
     // Check existing session token
     const token = PFM_API.getSessionToken();
@@ -113,6 +115,8 @@ window.PFM_APP = {
     document.getElementById('profEmail').value = this.currentUser.email || '';
     document.getElementById('profBaseCurrency').value = this.currentUser.base_currency || 'THB';
     document.getElementById('profTimezone').value = this.currentUser.timezone || 'Asia/Bangkok';
+
+    this.checkApiConfigPermission();
   },
 
   navigateTo: function(viewName) {
@@ -157,6 +161,7 @@ window.PFM_APP = {
     } else if (viewName === 'categories') {
       this.renderCategoriesView();
     } else if (viewName === 'settings') {
+      this.checkApiConfigPermission();
       this.loadAuditLogs();
     }
   },
@@ -277,18 +282,52 @@ window.PFM_APP = {
     }
   },
 
+  isUserAuthorizedForApiConfig: function() {
+    if (!this.currentUser) return false;
+    const role = String(this.currentUser.role || '').toLowerCase();
+    const email = String(this.currentUser.email || '').toLowerCase();
+    return role === 'admin' || email.includes('admin') || email.includes('bannarak') || localStorage.getItem('pfm_admin_api_unlocked') === 'true';
+  },
+
+  checkApiConfigPermission: function() {
+    const card = document.getElementById('adminApiConfigCard');
+    if (!card) return;
+    const isAllowed = this.isUserAuthorizedForApiConfig();
+    card.classList.toggle('d-none', !isAllowed);
+  },
+
+  unlockApiConfig: function() {
+    const pin = prompt('กรุณากรอกรหัส PIN หรือ Admin Key เพื่อปลดล็อกการตั้งค่า API Endpoint:');
+    if (pin === '123456' || pin === 'admin') {
+      localStorage.setItem('pfm_admin_api_unlocked', 'true');
+      this.checkApiConfigPermission();
+      this.showToast('ปลดล็อกสิทธิ์ตั้งค่า Google Apps Script API สำเร็จ', 'success');
+    } else if (pin !== null) {
+      this.showToast('รหัสยืนยันสิทธิ์ไม่ถูกต้อง', 'danger');
+    }
+  },
+
   handleSaveApiEndpoint: function(e) {
     e.preventDefault();
-    const url = document.getElementById('settingApiEndpoint').value.trim();
+    if (!this.isUserAuthorizedForApiConfig()) {
+      this.showToast('คุณไม่มีสิทธิ์แก้ไขการเชื่อมต่อ API', 'danger');
+      return;
+    }
+    const settingEl = document.getElementById('settingApiEndpoint');
+    const url = settingEl ? settingEl.value.trim() : '';
     PFM_API.setEndpoint(url);
-    document.getElementById('authApiEndpointInput').value = PFM_API.getEndpoint();
+    const authInput = document.getElementById('authApiEndpointInput');
+    if (authInput) authInput.value = PFM_API.getEndpoint();
     this.showToast('บันทึก URL ของ Backend API เรียบร้อยแล้ว', 'success');
   },
 
   saveAuthApiEndpoint: function() {
-    const url = document.getElementById('authApiEndpointInput').value.trim();
+    const authInput = document.getElementById('authApiEndpointInput');
+    if (!authInput) return;
+    const url = authInput.value.trim();
     PFM_API.setEndpoint(url);
-    document.getElementById('settingApiEndpoint').value = PFM_API.getEndpoint();
+    const settingInput = document.getElementById('settingApiEndpoint');
+    if (settingInput) settingInput.value = PFM_API.getEndpoint();
     this.showToast('อัปเดต API Endpoint เรียบร้อย: ' + PFM_API.getEndpoint(), 'info');
   },
 

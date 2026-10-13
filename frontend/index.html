@@ -37,7 +37,6 @@
           <div class="sidebar-brand-icon">BB</div>
           <div>
             <h5 class="fw-bold mb-0">Bank_bana</h5>
-            <div class="small text-muted">Google Sheets Live & Offline PWA</div>
           </div>
         </div>
         <button class="btn btn-sm btn-outline-secondary" onclick="PFM_APP.toggleTheme()" title="สลับโหมดสี">
@@ -82,13 +81,6 @@
         <button type="submit" id="btnLoginSubmit" class="btn btn-primary w-100 py-2 fw-semibold">
           <i class="bi bi-box-arrow-in-right me-2"></i>เข้าสู่ระบบ
         </button>
-
-        <div class="mt-3 pt-3 border-top d-flex justify-content-between align-items-center small">
-          <span class="text-muted">ต้องการทดสอบด้วยบัญชีตัวอย่าง?</span>
-          <button type="button" class="btn btn-sm btn-link text-decoration-none p-0" onclick="PFM_AUTH.fillDemoAccount()">
-            กรอกบัญชี Demo (`demo@pfm.local`)
-          </button>
-        </div>
       </form>
 
       <!-- Register Form -->
@@ -125,19 +117,6 @@
         </button>
       </form>
 
-      <!-- GAS API Endpoint Quick Config -->
-      <div class="mt-3 pt-2 border-top">
-        <a class="small text-muted text-decoration-none d-block" data-bs-toggle="collapse" href="#authApiCollapse">
-          <i class="bi bi-gear me-1"></i>ตั้งค่าการเชื่อมต่อ Google Apps Script API URL
-        </a>
-        <div class="collapse mt-2" id="authApiCollapse">
-          <div class="input-group input-group-sm">
-            <input type="text" id="authApiEndpointInput" class="form-control" placeholder="https://script.google.com/macros/s/.../exec หรือ /api">
-            <button class="btn btn-outline-primary" type="button" onclick="PFM_APP.saveAuthApiEndpoint()">บันทึก</button>
-          </div>
-          <div class="form-text small">ค่าเริ่มต้น `/api` เชื่อมต่อตรงกับ Google Sheets จริงผ่าน Live Bridge หรือใส่ URL Web App ของ GAS</div>
-        </div>
-      </div>
     </div>
   </div>
 
@@ -150,8 +129,7 @@
       <div class="sidebar-brand">
         <div class="sidebar-brand-icon">BB</div>
         <div>
-          <div class="fw-bold">Bank_bana</div>
-          <div class="small text-secondary" style="font-size: 0.75rem;">Phase 1–4 • Live & Offline</div>
+          <div class="fw-bold fs-6">Bank_bana</div>
         </div>
       </div>
 
@@ -672,12 +650,15 @@
               </div>
             </div>
 
-            <!-- API Connection & Backup/Restore -->
+            <!-- API Connection (Admin / Authorized Access Only) & Backup/Restore -->
             <div class="col-12 col-lg-6">
-              <div class="surface-card mb-3">
-                <h5 class="fw-bold mb-2"><i class="bi bi-cloud-check me-2 text-success"></i>การเชื่อมต่อ Google Apps Script & Google Sheets</h5>
+              <div id="adminApiConfigCard" class="surface-card mb-3 d-none">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                  <h5 class="fw-bold mb-0"><i class="bi bi-shield-lock-fill me-2 text-warning"></i>การเชื่อมต่อ Google Apps Script API</h5>
+                  <span class="badge bg-warning text-dark"><i class="bi bi-lock-fill me-1"></i>เฉพาะผู้ดูแลระบบ</span>
+                </div>
                 <div class="small text-muted mb-2">
-                  Spreadsheet ID จริงที่เชื่อมต่ออยู่: <code>15B_GJFBZjTEOhTeK89ZP0yWEosRbzMZ9Qx3hexa-I7A</code>
+                  Spreadsheet ID: <code>15B_GJFBZjTEOhTeK89ZP0yWEosRbzMZ9Qx3hexa-I7A</code>
                 </div>
                 <form id="apiEndpointForm">
                   <label class="form-label small">Backend API Endpoint URL</label>

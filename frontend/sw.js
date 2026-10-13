@@ -8,7 +8,7 @@
  * ============================================================================
  */
 
-const CACHE_NAME = 'bank-bana-pwa-v1.8';
+const CACHE_NAME = 'bank-bana-pwa-v1.9';
 const APP_SHELL_ASSETS = [
   './',
   './index.html',
