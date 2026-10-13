@@ -30,9 +30,131 @@
   --bg-sidebar: #090D16;
   --text-primary: #F8FAFC;
   --text-secondary: #CBD5E1;
-  --text-muted: #64748B;
+  --text-muted: #94A3B8;
   --border-color: #334155;
   --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+}
+
+/* Dark Mode Comprehensive Text & Surface Guard Rules */
+[data-theme="dark"] {
+  color-scheme: dark;
+}
+
+/* Guard against dark text accidentally blending into dark backgrounds */
+[data-theme="dark"] strong.text-dark,
+[data-theme="dark"] div.text-dark,
+[data-theme="dark"] p.text-dark,
+[data-theme="dark"] span.text-dark:not(.badge),
+[data-theme="dark"] td.text-dark,
+[data-theme="dark"] th.text-dark {
+  color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] .text-muted {
+  color: var(--text-muted) !important;
+}
+
+[data-theme="dark"] .text-secondary {
+  color: var(--text-secondary) !important;
+}
+
+[data-theme="dark"] .form-text {
+  color: var(--text-muted) !important;
+}
+
+[data-theme="dark"] .form-label {
+  color: var(--text-primary) !important;
+}
+
+/* Convert bright light containers to dark subtle surfaces */
+[data-theme="dark"] .bg-light {
+  background-color: var(--bg-subtle) !important;
+  color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] .bg-white {
+  background-color: var(--bg-subtle) !important;
+  color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] .input-group-text {
+  background-color: var(--bg-subtle) !important;
+  color: var(--text-secondary) !important;
+  border-color: var(--border-color) !important;
+}
+
+/* Dark mode border harmony */
+[data-theme="dark"] .border,
+[data-theme="dark"] .border-top,
+[data-theme="dark"] .border-bottom,
+[data-theme="dark"] .border-start,
+[data-theme="dark"] .border-end {
+  border-color: var(--border-color) !important;
+}
+
+/* Invert modal close X button so it is clearly visible */
+[data-theme="dark"] .btn-close {
+  filter: invert(1) grayscale(100%) brightness(200%);
+}
+
+/* Badges with light backgrounds */
+[data-theme="dark"] .badge.bg-light {
+  background-color: var(--bg-subtle) !important;
+  color: #CBD5E1 !important;
+  border-color: var(--border-color) !important;
+}
+
+[data-theme="dark"] .badge.bg-warning.text-dark {
+  background-color: #F59E0B !important;
+  color: #0F172A !important;
+}
+
+[data-theme="dark"] .badge.bg-info.text-dark {
+  background-color: #0EA5E9 !important;
+  color: #0F172A !important;
+}
+
+/* Dark mode alerts with balanced opacity */
+[data-theme="dark"] .alert-info {
+  background-color: rgba(14, 165, 233, 0.12) !important;
+  border-color: rgba(14, 165, 233, 0.3) !important;
+  color: #7DD3FC !important;
+}
+
+[data-theme="dark"] .alert-warning {
+  background-color: rgba(245, 158, 11, 0.12) !important;
+  border-color: rgba(245, 158, 11, 0.3) !important;
+  color: #FCD34D !important;
+}
+
+[data-theme="dark"] .alert-success {
+  background-color: rgba(16, 185, 129, 0.12) !important;
+  border-color: rgba(16, 185, 129, 0.3) !important;
+  color: #6EE7B7 !important;
+}
+
+[data-theme="dark"] .alert-danger {
+  background-color: rgba(239, 68, 68, 0.12) !important;
+  border-color: rgba(239, 68, 68, 0.3) !important;
+  color: #FCA5A5 !important;
+}
+
+/* Table hover in dark mode */
+[data-theme="dark"] .table-custom tbody tr:hover td {
+  background-color: rgba(255, 255, 255, 0.04) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Form input placeholder in dark mode */
+[data-theme="dark"] ::placeholder {
+  color: #64748B !important;
+  opacity: 1;
+}
+
+/* Progress bar background in dark mode */
+[data-theme="dark"] .progress {
+  background-color: var(--bg-subtle) !important;
+  border: 1px solid var(--border-color);
 }
 
 * {

@@ -138,7 +138,7 @@ window.PFM_DEBTS = {
 
             <div class="d-flex flex-wrap justify-content-between align-items-center small text-muted mt-2 pt-2 border-top gap-2">
               <div>
-                <span>ครบกำหนดรอบถัดไป: <strong class="text-dark">${PFM_UTILS.escapeHtml(cc.next_due_date)}</strong></span>
+                <span>ครบกำหนดรอบถัดไป: <strong class="text-primary-emphasis">${PFM_UTILS.escapeHtml(cc.next_due_date)}</strong></span>
                 <span class="ms-2">ขั้นต่ำ ~${PFM_UTILS.formatCurrency(cc.estimated_minimum_payment, cc.currency)}</span>
               </div>
               <button class="btn btn-sm btn-primary" onclick="PFM_DEBTS.openCreditCardPayModal('${PFM_UTILS.escapeHtml(cc.account_id)}')">

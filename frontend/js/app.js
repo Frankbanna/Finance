@@ -75,6 +75,7 @@ window.PFM_APP = {
 
   applyTheme: function(theme) {
     document.documentElement.setAttribute('data-theme', theme);
+    document.documentElement.setAttribute('data-bs-theme', theme);
     localStorage.setItem(PFM_CONFIG.STORAGE_KEYS.THEME, theme);
     const icon = document.getElementById('themeToggleIcon');
     if (icon) {
