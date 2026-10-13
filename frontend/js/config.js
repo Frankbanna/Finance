@@ -8,8 +8,8 @@ window.PFM_CONFIG = {
   APP_NAME: 'Bank_bana',
   VERSION: '1.0.0-phase4-complete',
   SPREADSHEET_ID: '15B_GJFBZjTEOhTeK89ZP0yWEosRbzMZ9Qx3hexa-I7A',
-  // Uses custom GAS Web App URL if configured in localStorage, otherwise uses live local Google Sheets bridge `/api`
-  DEFAULT_API_URL: localStorage.getItem('pfm_gas_api_url') || '/api',
+  // Direct Google Apps Script Web App Endpoint (online 100% from anywhere)
+  DEFAULT_API_URL: localStorage.getItem('pfm_gas_api_url') || 'https://script.google.com/macros/s/AKfycbzsMreEyg3Wp4ikWYr6jxlCEl83h430m_0c_5px05s_RNo3bbsLMxSPAtivijPKE4npPg/exec',
   STORAGE_KEYS: {
     SESSION_TOKEN: 'pfm_session_token',
     USER_PROFILE: 'pfm_user_profile',
