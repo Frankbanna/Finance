@@ -94,14 +94,30 @@ window.PFM_AUTH = {
         timezone: 'Asia/Bangkok'
       });
 
-      PFM_API.setSession(res.session_token, res.user);
-      PFM_APP.showToast('สร้างบัญชีผู้ใช้สำเร็จ!', 'success');
-      await PFM_APP.bootstrapAuthenticatedSession(res.user);
+      // Clear the registration form
+      const regForm = document.getElementById('authRegisterForm');
+      if (regForm) regForm.reset();
+
+      // Switch to Login Tab so the user logs in explicitly before entering the app
+      this.switchAuthTab('login');
+      this.switchLoginCredentialMode('password');
+
+      // Pre-fill the registered email on the login screen
+      const loginEmailInput = document.getElementById('loginEmail');
+      if (loginEmailInput) loginEmailInput.value = email;
+
+      const loginPasswordInput = document.getElementById('loginPassword');
+      if (loginPasswordInput) {
+        loginPasswordInput.value = '';
+        loginPasswordInput.focus();
+      }
+
+      PFM_APP.showToast('สมัครสมาชิกสำเร็จเรียบร้อย! กรุณาเข้าสู่ระบบด้วยอีเมลและรหัสผ่านของคุณ', 'success');
     } catch (err) {
       PFM_APP.showToast(err.message, 'danger');
     } finally {
       btn.disabled = false;
-      btn.innerHTML = '<i class="bi bi-person-plus me-2"></i>สมัครสมาชิกและเข้าใช้งาน';
+      btn.innerHTML = '<i class="bi bi-person-plus me-2"></i>ยืนยันสมัครสมาชิก';
     }
   },
 
