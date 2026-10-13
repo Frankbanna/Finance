@@ -7,7 +7,14 @@
 
 window.PFM_API = {
   getEndpoint: function() {
-    return localStorage.getItem(PFM_CONFIG.STORAGE_KEYS.API_URL) || PFM_CONFIG.DEFAULT_API_URL;
+    const stored = localStorage.getItem(PFM_CONFIG.STORAGE_KEYS.API_URL);
+    if (!stored || stored === '/api' || !stored.startsWith('https://script.google.com/')) {
+      if (stored) {
+        localStorage.removeItem(PFM_CONFIG.STORAGE_KEYS.API_URL);
+      }
+      return PFM_CONFIG.DEFAULT_API_URL;
+    }
+    return stored;
   },
 
   setEndpoint: function(url) {

@@ -107,6 +107,30 @@ window.PFM_OFFLINE = {
     });
 
     this.updateStatusBarUI();
+    this.checkConnection();
+    window.addEventListener('focus', () => this.checkConnection());
+  },
+
+  checkConnection: async function() {
+    if (this.isForceOffline() || !navigator.onLine) {
+      this.updateStatusBarUI();
+      return;
+    }
+    try {
+      const endpoint = PFM_API.getEndpoint();
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ action: 'system.ping' }),
+        redirect: 'follow'
+      });
+      if (res.ok) {
+        this.lastReachable = true;
+        this.updateStatusBarUI();
+      }
+    } catch (e) {
+      // offline or unreachable
+    }
   },
 
   registerServiceWorker: function() {
